@@ -5,7 +5,7 @@ class Alert {
     static function tick(mode as Lang.Number, power as Lang.Number) as Void {
         if (mode == Settings.ALERT_SOUND || mode == Settings.ALERT_BOTH) {
             if (Attention has :playTone) {
-                Attention.playTone(Attention.TONE_KEY);
+                Attention.playTone(Attention.TONE_ALERT_HI);
             }
         }
         if (mode == Settings.ALERT_VIBRATE || mode == Settings.ALERT_BOTH) {
