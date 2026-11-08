@@ -132,9 +132,9 @@ class StopwatchView extends WatchUi.View {
         var cy = h / 2;
         var r = (w < h ? w : h) / 2;
         var d = r * 78 / 100;
-        var s = r * 13 / 100;
+        var s = r * 9 / 100;
         var c = (d * 7071) / 10000;
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
+        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
         dc.setPenWidth(2);
 
         var x = cx + c;
@@ -154,16 +154,23 @@ class StopwatchView extends WatchUi.View {
 
         x = cx - d;
         y = cy;
-        dc.drawArc(x, y, s, Graphics.ARC_CLOCKWISE, 45, 315);
-        dc.drawLine(x + s, y - s, x + s - s / 2, y - s + s / 2);
-        dc.drawLine(x + s, y - s, x + s + s / 2, y - s + s / 2);
+        dc.drawArc(x, y, s, Graphics.ARC_CLOCKWISE, 20, 340);
+        var tipX = x + (s * 94) / 100;
+        var tipY = y - (s * 34) / 100;
+        var a = s / 2;
+        var b = s / 3;
+        dc.drawLine(tipX, tipY, tipX - (a * 34) / 100 + (b * 94) / 100, tipY - (a * 94) / 100 - (b * 34) / 100);
+        dc.drawLine(tipX, tipY, tipX - (a * 34) / 100 - (b * 94) / 100, tipY - (a * 94) / 100 + (b * 34) / 100);
 
-        x = cx - c;
-        y = cy + c;
+        var dots = [[-4226, 9063], [-7071, 7071], [-9063, 4226]];
         for (var i = 0; i < 3; i++) {
-            var yy = y - s + i * s;
-            dc.drawLine(x - s, yy, x + s, yy);
-            dc.fillCircle(x + (i == 1 ? -(s / 2) : s / 2), yy, 2);
+            var px = cx + (d * dots[i][0]) / 10000;
+            var py = cy + (d * dots[i][1]) / 10000;
+            var dr = s / 4;
+            if (dr < 2) {
+                dr = 2;
+            }
+            dc.fillCircle(px, py, dr);
         }
     }
 }
