@@ -123,5 +123,47 @@ class StopwatchView extends WatchUi.View {
         dc.drawText(w / 2, h * 46 / 100, Graphics.FONT_NUMBER_HOT, formatTime(getElapsedMs()), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         dc.drawText(w / 2, h * 74 / 100, Graphics.FONT_LARGE, Lang.format("TICKS $1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+
+        drawButtonIcons(dc, w, h);
+    }
+
+    function drawButtonIcons(dc as Graphics.Dc, w as Lang.Number, h as Lang.Number) as Void {
+        var cx = w / 2;
+        var cy = h / 2;
+        var r = (w < h ? w : h) / 2;
+        var d = r * 78 / 100;
+        var s = r * 13 / 100;
+        var c = (d * 7071) / 10000;
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
+        dc.setPenWidth(2);
+
+        var x = cx + c;
+        var y = cy - c;
+        if (running) {
+            dc.fillRectangle(x - s / 2, y - s, s / 3, 2 * s);
+            dc.fillRectangle(x + s / 6, y - s, s / 3, 2 * s);
+        } else {
+            dc.fillPolygon([[x - s / 2, y - s], [x + s, y], [x - s / 2, y + s]] as Lang.Array<Graphics.Point2D>);
+        }
+
+        x = cx - c;
+        y = cy - c;
+        dc.drawLine(x + s, y, x - s, y);
+        dc.drawLine(x - s, y, x - s + s / 2, y - s / 2);
+        dc.drawLine(x - s, y, x - s + s / 2, y + s / 2);
+
+        x = cx - d;
+        y = cy;
+        dc.drawArc(x, y, s, Graphics.ARC_CLOCKWISE, 45, 315);
+        dc.drawLine(x + s, y - s, x + s - s / 2, y - s + s / 2);
+        dc.drawLine(x + s, y - s, x + s + s / 2, y - s + s / 2);
+
+        x = cx - c;
+        y = cy + c;
+        for (var i = 0; i < 3; i++) {
+            var yy = y - s + i * s;
+            dc.drawLine(x - s, yy, x + s, yy);
+            dc.fillCircle(x + (i == 1 ? -(s / 2) : s / 2), yy, 2);
+        }
     }
 }
