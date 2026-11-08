@@ -13,8 +13,6 @@ class StopwatchView extends WatchUi.View {
     var ticks = 0;
     var uiTimer as Timer.Timer or Null = null;
     var intervalMs = 0;
-    var stretchTxt = "";
-    var stretchBmp as Graphics.BufferedBitmap or Null = null;
 
     function initialize() {
         View.initialize();
@@ -121,41 +119,7 @@ class StopwatchView extends WatchUi.View {
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         var txt = formatTime(getElapsedMs());
-        var font = Graphics.FONT_NUMBER_HOT;
-        if (txt != stretchTxt) {
-            stretchTxt = txt;
-            stretchBmp = null;
-            try {
-                var tw = dc.getTextWidthInPixels(txt, font);
-                var th = dc.getFontHeight(font);
-                if (tw > 0 && th > 0) {
-                    var bmp = new Graphics.BufferedBitmap({:width => tw, :height => th});
-                    var bdc = bmp.getDc();
-                    bdc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-                    bdc.clear();
-                    bdc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-                    bdc.drawText(0, th / 2, font, txt, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-                    stretchBmp = bmp;
-                }
-            } catch (e) {
-                stretchBmp = null;
-            }
-        }
-        var drawn = false;
-        if (stretchBmp != null) {
-            try {
-                var tw2 = dc.getTextWidthInPixels(txt, font);
-                var th2 = dc.getFontHeight(font);
-                var stretch = 1.25;
-                dc.drawScaledBitmap(w / 2 - (tw2 * stretch) / 2, h * 46 / 100 - th2 / 2, tw2 * stretch, th2, stretchBmp);
-                drawn = true;
-            } catch (e) {
-                drawn = false;
-            }
-        }
-        if (!drawn) {
-            dc.drawText(w / 2, h * 46 / 100, font, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        }
+        dc.drawText(w / 2, h * 46 / 100, Graphics.FONT_NUMBER_HOT, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         dc.drawText(w / 2, h * 74 / 100, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
