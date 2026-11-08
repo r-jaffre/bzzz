@@ -149,10 +149,6 @@ class StopwatchView extends WatchUi.View {
         } else if (paused) {
             dc.setColor(statusColor, Graphics.COLOR_BLACK);
             dc.fillCircle(w / 2, dotY, dotR);
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-            dc.fillCircle(w / 2 - dotR / 2, dotY, dotR / 2);
-            dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_BLACK);
-            dc.fillCircle(w / 2 - dotR / 5, dotY, dotR * 9 / 20);
         } else {
             dc.setColor(statusColor, Graphics.COLOR_BLACK);
             dc.setPenWidth(2);
