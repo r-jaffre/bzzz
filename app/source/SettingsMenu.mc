@@ -19,6 +19,9 @@ function menuItemLabel(id as Lang.Symbol) as Lang.String {
     } else if (id == :power) {
         return Lang.format(WatchUi.loadResource(Rez.Strings.MenuPower), [Settings.getVibePower()]);
     }
+    if (id == :test) {
+        return WatchUi.loadResource(Rez.Strings.MenuTest);
+    }
     return WatchUi.loadResource(Rez.Strings.MenuBack);
 }
 
@@ -27,6 +30,7 @@ function makeSettingsMenu() as WatchUi.Menu2 {
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:interval), null, :interval, null));
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:alert), null, :alert, null));
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:power), null, :power, null));
+    menu.addItem(new WatchUi.MenuItem(menuItemLabel(:test), null, :test, null));
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:back), null, :back, null));
     return menu;
 }
@@ -50,6 +54,8 @@ class SettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
         } else if (id == :power) {
             Settings.setVibePower(Settings.nextVibePower(Settings.getVibePower()));
             menu.updateItem(new WatchUi.MenuItem(menuItemLabel(:power), null, :power, null), 2);
+        } else if (id == :test) {
+            Alert.testSound();
         } else {
             WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
         }

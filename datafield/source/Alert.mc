@@ -5,7 +5,7 @@ class Alert {
     static function tick(mode as Lang.Number, power as Lang.Number) as Void {
         if (mode == Settings.ALERT_SOUND || mode == Settings.ALERT_BOTH) {
             if (Attention has :playTone) {
-                Attention.playTone(Attention.TONE_ALERT_HI);
+                Attention.playTone(Attention.TONE_LOUD_BEEP);
             }
         }
         if (mode == Settings.ALERT_VIBRATE || mode == Settings.ALERT_BOTH) {
@@ -13,6 +13,12 @@ class Alert {
                 var len = 100 + power * 40;
                 Attention.vibrate([new Attention.VibeProfile(100, len)]);
             }
+        }
+    }
+
+    static function testSound() as Void {
+        if (Attention has :playTone) {
+            Attention.playTone(Attention.TONE_LOUD_BEEP);
         }
     }
 

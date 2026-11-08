@@ -24,4 +24,5 @@
     <string id="MenuAlert">Alert: $1$</string>
     <string id="MenuPower">Vibe power: $1$</string>
     <string id="MenuBack">Back</string>
+    <string id="MenuTest">Test sound</string>
 </strings>

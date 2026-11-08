@@ -24,4 +24,5 @@
     <string id="MenuAlert">Alerte : $1$</string>
     <string id="MenuPower">Puissance : $1$</string>
     <string id="MenuBack">Retour</string>
+    <string id="MenuTest">Tester le son</string>
 </strings>
