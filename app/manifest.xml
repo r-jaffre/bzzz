@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
-    <iq:application entry="BzzzApp" id="B2CA43AA012A40BCAA5DA4CDF265F7D7" launcherIcon="@Drawables.LauncherIcon" minSdkVersion="3.2.0" name="@Strings.AppName" type="watch-app" version="1.0.0">
+    <iq:application entry="BzzzApp" id="F3A6C5B0142048E88DA7416B81B2AB1B" launcherIcon="@Drawables.LauncherIcon" minSdkVersion="3.2.0" name="@Strings.AppName" type="watch-app" version="1.0.0">
         <iq:products>
             <iq:product id="fr255"/>
             <iq:product id="fr255s"/>
