@@ -8,7 +8,8 @@ class Settings {
     static const DEFAULT_INTERVAL_SEC = 15;
 
     static function getIntervalSec() as Lang.Number {
-        return Properties.getValue("intervalSec") as Lang.Number;
+        var v = Properties.getValue("intervalSec") as Lang.Number;
+        return v > 0 ? v : Settings.DEFAULT_INTERVAL_SEC;
     }
 
     static function setIntervalSec(value as Lang.Number) as Void {
@@ -16,7 +17,9 @@ class Settings {
     }
 
     static function getAlertMode() as Lang.Number {
-        return Properties.getValue("alertMode") as Lang.Number;
+        var v = Properties.getValue("alertMode") as Lang.Number;
+        if (v < 0) { return 0; }
+        return v > 2 ? 2 : v;
     }
 
     static function setAlertMode(value as Lang.Number) as Void {
@@ -42,7 +45,9 @@ class Settings {
     }
 
     static function getVibePower() as Lang.Number {
-        return Properties.getValue("vibePower") as Lang.Number;
+        var v = Properties.getValue("vibePower") as Lang.Number;
+        if (v < 1) { return 1; }
+        return v > 5 ? 5 : v;
     }
 
     static function setVibePower(value as Lang.Number) as Void {
@@ -53,13 +58,4 @@ class Settings {
         return current >= 5 ? 1 : current + 1;
     }
 
-    static function alertModeLabel(mode as Lang.Number) as Lang.String {
-        if (mode == Settings.ALERT_SOUND) {
-            return "Sound";
-        }
-        if (mode == Settings.ALERT_BOTH) {
-            return "Vibrate + sound";
-        }
-        return "Vibrate";
-    }
 }

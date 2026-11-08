@@ -79,6 +79,9 @@ class StopwatchView extends WatchUi.View {
         if (iv > 0) {
             intervalMs = iv;
         }
+        if (intervalMs <= 0) {
+            intervalMs = 15000;
+        }
         var tickIndex = elapsed / intervalMs;
         if (tickIndex > ticks) {
             ticks = tickIndex;

@@ -20,4 +20,8 @@
     <string id="Power3">3</string>
     <string id="Power4">4</string>
     <string id="Power5">5 - strong</string>
+    <string id="MenuInterval">Interval: $1$s</string>
+    <string id="MenuAlert">Alert: $1$</string>
+    <string id="MenuPower">Vibe power: $1$</string>
+    <string id="MenuBack">Back</string>
 </strings>

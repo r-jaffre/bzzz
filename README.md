@@ -2,6 +2,10 @@
 
 A Garmin Connect IQ stopwatch app for the **Forerunner 255** (fr255 / fr255s / fr255m / fr255sm) that gives a short vibration tick at a regular interval — built for visually impaired swimmers who want to count rest time against the pool clock without looking at the watch.
 
+## Languages
+
+English (default) and French (`fre`). French strings live in `resources-fre/strings/strings.xml` and the manifest declares `<iq:language>fre</iq:language>`; set the watch system language to French and the app, settings menu, and Garmin Connect settings all show French (e.g. « Intervalle : 15s », « Alerte : Vibration », « Puissance : 3 », « Retour »).
+
 ## How it works
 
 - Press **START** (or tap the screen) to start the stopwatch.
