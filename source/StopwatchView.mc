@@ -108,22 +108,30 @@ class StopwatchView extends WatchUi.View {
         var w = dc.getWidth();
         var h = dc.getHeight();
 
-        var status = "READY";
         var statusColor = Graphics.COLOR_WHITE;
         if (running) {
-            status = "RUNNING";
             statusColor = Graphics.COLOR_GREEN;
         } else if (paused) {
-            status = "PAUSED";
             statusColor = Graphics.COLOR_YELLOW;
         }
         dc.setColor(statusColor, Graphics.COLOR_BLACK);
-        dc.drawText(w / 2, h * 18 / 100, Graphics.FONT_MEDIUM, status, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.fillCircle(w / 2, h * 16 / 100, h * 30 / 1000);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        dc.drawText(w / 2, h * 46 / 100, Graphics.FONT_NUMBER_HOT, formatTime(getElapsedMs()), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        var txt = formatTime(getElapsedMs());
+        var font = Graphics.FONT_NUMBER_HOT;
+        var tw = dc.getTextWidthInPixels(txt, font);
+        var th = dc.getFontHeight(font);
+        var bmp = new Graphics.BufferedBitmap({:width => tw, :height => th});
+        var bdc = bmp.getDc();
+        bdc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        bdc.clear();
+        bdc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        bdc.drawText(0, th / 2, font, txt, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+        var stretch = 1.25;
+        dc.drawScaledBitmap(w / 2 - (tw * stretch) / 2, h * 46 / 100 - th / 2, tw * stretch, th, bmp);
 
-        dc.drawText(w / 2, h * 74 / 100, Graphics.FONT_LARGE, Lang.format("TICKS $1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(w / 2, h * 74 / 100, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         drawButtonHints(dc, w, h);
     }
@@ -142,7 +150,7 @@ class StopwatchView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
         dc.setPenWidth(2);
 
-        var p = hintPoint(cx, cy, d, -40);
+        var p = hintPoint(cx, cy, d, -30);
         var x = p[0];
         var y = p[1];
         if (running) {
@@ -155,7 +163,7 @@ class StopwatchView extends WatchUi.View {
         var dots = [176, 180, 184];
         for (var i = 0; i < dots.size(); i++) {
             p = hintPoint(cx, cy, d, dots[i]);
-            dc.fillCircle(p[0], p[1], gs / 8 > 1 ? gs / 8 : 1);
+            dc.fillCircle(p[0], p[1], gs / 4);
         }
 
         p = hintPoint(cx, cy, d, 150);
@@ -173,18 +181,18 @@ class StopwatchView extends WatchUi.View {
             prevY = sy;
         }
         var tipA = 340 * 0.0174533;
-        var tipX = x + (rr * Math.cos(tipA)).toNumber();
-        var tipY = y + (rr * Math.sin(tipA)).toNumber();
+        var ex = x + (rr * Math.cos(tipA)).toNumber();
+        var ey = y + (rr * Math.sin(tipA)).toNumber();
         var tx = (-Math.sin(tipA)).toNumber();
         var ty = (Math.cos(tipA)).toNumber();
         var nx = (Math.cos(tipA)).toNumber();
         var ny = (Math.sin(tipA)).toNumber();
-        var a2 = (rr * 8) / 10;
-        var b2 = (rr * 11) / 20;
-        dc.fillPolygon([
-            [tipX, tipY],
-            [tipX - a2 * tx + b2 * nx, tipY - a2 * ty + b2 * ny],
-            [tipX - a2 * tx - b2 * nx, tipY - a2 * ty - b2 * ny]
-        ] as Lang.Array<Graphics.Point2D>);
+        var tipX = ex + (rr * 9 / 10) * tx;
+        var tipY = ey + (rr * 9 / 10) * ty;
+        var b1x = ex - (rr / 10) * tx + (rr * 11 / 20) * nx;
+        var b1y = ey - (rr / 10) * ty + (rr * 11 / 20) * ny;
+        var b2x = ex - (rr / 10) * tx - (rr * 11 / 20) * nx;
+        var b2y = ey - (rr / 10) * ty - (rr * 11 / 20) * ny;
+        dc.fillPolygon([[tipX, tipY], [b1x, b1y], [b2x, b2y]] as Lang.Array<Graphics.Point2D>);
     }
 }

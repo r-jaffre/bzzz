@@ -73,9 +73,9 @@ def render(path, W, running):
     rect(cx - 55, int(H * TIME_Y / 100) - 28, 110, 56, white)
     rect(cx - 40, int(H * TICKS_Y / 100) - 12, 80, 24, white)
 
-    # Button hints at the real FR255 button angles: START ~ -40deg,
-    # UP 180deg (dots), DOWN ~150deg (reset). Circle drawn as line
-    # segments (drawArc uses a different angle convention).
+    # Button hints at the real FR255 button angles: START ~ -30deg,
+    # UP 180deg (dots), DOWN ~150deg (reset circle+arrow, drawn as
+    # line segments). Same geometry as drawButtonHints().
     d = int(r * 0.90)
     gs = int(W * 0.05)
 
@@ -83,7 +83,7 @@ def render(path, W, running):
         rad = math.radians(deg)
         return int(cx + d * math.cos(rad)), int(cy + d * math.sin(rad))
 
-    x, y = hint_point(-40)
+    x, y = hint_point(-30)
     if running:
         rect(x - gs // 2, y - gs // 2, max(1, gs // 3), gs, gray)
         rect(x + gs // 6, y - gs // 2, max(1, gs // 3), gs, gray)
@@ -92,7 +92,7 @@ def render(path, W, running):
 
     for ang in (176, 180, 184):
         x, y = hint_point(ang)
-        disc(x, y, max(1, gs // 8), gray)
+        disc(x, y, max(1, gs // 4), gray)
 
     x, y = hint_point(150)
     rr = gs // 2
@@ -103,12 +103,13 @@ def render(path, W, running):
         line(prev[0], prev[1], cur[0], cur[1], gray, 2)
         prev = cur
     ta = math.radians(340)
-    tip = (x + rr * math.cos(ta), y + rr * math.sin(ta))
+    ex, ey = x + rr * math.cos(ta), y + rr * math.sin(ta)
     tx, ty = -math.sin(ta), math.cos(ta)
     nx, ny = math.cos(ta), math.sin(ta)
-    a2 = rr * 0.8; b2 = rr * 0.55
-    tri3 = [tip, (tip[0] - a2 * tx + b2 * nx, tip[1] - a2 * ty + b2 * ny),
-            (tip[0] - a2 * tx - b2 * nx, tip[1] - a2 * ty - b2 * ny)]
+    tip = (ex + rr * 0.9 * tx, ey + rr * 0.9 * ty)
+    b1 = (ex - rr * 0.1 * tx + rr * 0.55 * nx, ey - rr * 0.1 * ty + rr * 0.55 * ny)
+    b2 = (ex - rr * 0.1 * tx - rr * 0.55 * nx, ey - rr * 0.1 * ty - rr * 0.55 * ny)
+    tri3 = [tip, b1, b2]
     for i in range(3):
         x0, y0 = tri3[i]; x1, y1 = tri3[(i + 1) % 3]
         line(x0, y0, x1, y1, gray, 2)
