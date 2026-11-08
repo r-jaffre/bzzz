@@ -134,7 +134,7 @@ class StopwatchView extends WatchUi.View {
         if (running) {
             statusColor = Graphics.COLOR_GREEN;
         } else if (paused) {
-            statusColor = Graphics.COLOR_YELLOW;
+            statusColor = Graphics.COLOR_ORANGE;
         }
         var timeY = h * 47 / 100;
         var th = dc.getFontHeight(Graphics.FONT_NUMBER_HOT);
@@ -143,14 +143,20 @@ class StopwatchView extends WatchUi.View {
         var gap = h * 4 / 100;
         var dotY = timeY - th / 2 - gap - dotR;
         var ticksY = timeY + th / 2 + gap + mh / 2;
-        dc.setColor(statusColor, Graphics.COLOR_BLACK);
         if (running) {
-            dc.fillCircle(w / 2, dotY, dotR * 7 / 5);
+            dc.setColor(statusColor, Graphics.COLOR_BLACK);
+            dc.fillCircle(w / 2, dotY, dotR);
         } else if (paused) {
+            dc.setColor(statusColor, Graphics.COLOR_BLACK);
+            dc.fillCircle(w / 2, dotY, dotR);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+            dc.fillCircle(w / 2 - dotR / 2, dotY, dotR / 2);
+            dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_BLACK);
+            dc.fillCircle(w / 2 - dotR / 5, dotY, dotR * 9 / 20);
+        } else {
+            dc.setColor(statusColor, Graphics.COLOR_BLACK);
             dc.setPenWidth(2);
             dc.drawCircle(w / 2, dotY, dotR);
-        } else {
-            dc.fillCircle(w / 2, dotY, dotR * 3 / 4);
         }
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);

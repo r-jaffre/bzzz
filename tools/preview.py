@@ -18,7 +18,7 @@ C_FRAC = 7071
 DOT_ANGLES = [(-4226, 9063), (-7071, 7071), (-9063, 4226)]
 
 
-def render(path, W, running):
+def render(path, W, running, paused_state=False):
     H = W
     px = [[(0, 0, 0, 255) for _ in range(W)] for _ in range(H)]
 
@@ -75,10 +75,15 @@ def render(path, W, running):
     gap = int(H * 4 / 100)
     dotY = timeY - th // 2 - gap - dotR
     ticksY = timeY + th // 2 + gap + mh // 2
+    orange = (255, 165, 0, 255)
     if running:
-        disc(cx, dotY, int(dotR * 1.4), green)
+        disc(cx, dotY, dotR, green)
+    elif paused_state:
+        disc(cx, dotY, dotR, orange)
+        disc(cx - dotR // 2, dotY, dotR // 2, white)
+        disc(cx - dotR // 5, dotY, int(dotR * 0.45), orange)
     else:
-        disc(cx, dotY, int(dotR * 0.75), white)
+        arc(cx, dotY, dotR, 0, 360, white, 2)
     rect(cx - 55, timeY - th // 2, 110, th, white)
     rect(cx - 20, ticksY - mh // 2, 40, mh, white)
 
@@ -156,4 +161,5 @@ def render(path, W, running):
 os.makedirs(OUT, exist_ok=True)
 render(os.path.join(OUT, 'preview-fr255-ready.png'), 520, False)
 render(os.path.join(OUT, 'preview-fr255-running.png'), 520, True)
+render(os.path.join(OUT, 'preview-fr255-paused.png'), 520, False, True)
 render(os.path.join(OUT, 'preview-fr255s-ready.png'), 436, False)
