@@ -39,11 +39,12 @@ class StopwatchView extends WatchUi.View {
             }
             stopAllTimers();
         } else {
+            var wasPaused = paused;
             running = true;
             paused = false;
             startMs = now;
             intervalMs = Settings.getIntervalSec() * 1000;
-            if (paused && remainingTickMs > 0) {
+            if (wasPaused && remainingTickMs > 0) {
                 nextTickAt = now + remainingTickMs;
                 armTick(remainingTickMs);
             } else {
