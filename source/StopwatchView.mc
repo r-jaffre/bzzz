@@ -142,7 +142,7 @@ class StopwatchView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
         dc.setPenWidth(2);
 
-        var p = hintPoint(cx, cy, d, -45);
+        var p = hintPoint(cx, cy, d, -60);
         var x = p[0];
         var y = p[1];
         if (running) {
@@ -152,21 +152,30 @@ class StopwatchView extends WatchUi.View {
             dc.fillPolygon([[x - gs / 2, y - gs / 2], [x + gs / 2, y], [x - gs / 2, y + gs / 2]] as Lang.Array<Graphics.Point2D>);
         }
 
-        var dots = [170, 180, 190];
+        var dots = [174, 180, 186];
         for (var i = 0; i < dots.size(); i++) {
             p = hintPoint(cx, cy, d, dots[i]);
             dc.fillCircle(p[0], p[1], gs / 6 > 2 ? gs / 6 : 2);
         }
 
-        p = hintPoint(cx, cy, d, 135);
+        p = hintPoint(cx, cy, d, 145);
         x = p[0];
         y = p[1];
-        dc.drawArc(x, y, gs / 2, Graphics.ARC_CLOCKWISE, 20, 340);
-        var tipX = x + (gs / 2 * 94) / 100;
-        var tipY = y - (gs / 2 * 34) / 100;
-        var a = gs / 4;
-        var b = gs / 6;
-        dc.drawLine(tipX, tipY, tipX - (a * 34) / 100 + (b * 94) / 100, tipY - (a * 94) / 100 - (b * 34) / 100);
-        dc.drawLine(tipX, tipY, tipX - (a * 34) / 100 - (b * 94) / 100, tipY - (a * 94) / 100 + (b * 34) / 100);
+        var rr = gs / 2;
+        dc.drawArc(x, y, rr, Graphics.ARC_CLOCKWISE, 30, 330);
+        var rad = 330 * 0.0174533;
+        var tipX = x + (rr * Math.cos(rad)).toNumber();
+        var tipY = y + (rr * Math.sin(rad)).toNumber();
+        var tx = (-Math.sin(rad)).toNumber();
+        var ty = (Math.cos(rad)).toNumber();
+        var nx = (Math.cos(rad)).toNumber();
+        var ny = (Math.sin(rad)).toNumber();
+        var a = (rr * 7) / 10;
+        var b = rr / 2;
+        dc.fillPolygon([
+            [tipX, tipY],
+            [tipX - a * tx + b * nx, tipY - a * ty + b * ny],
+            [tipX - a * tx - b * nx, tipY - a * ty - b * ny]
+        ] as Lang.Array<Graphics.Point2D>);
     }
 }
