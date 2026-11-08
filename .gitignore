@@ -1,5 +1,6 @@
 bin/
-*.prg
 *.iq
-developer_key
+developer_key*
+*.pem
+*.der
 .DS_Store

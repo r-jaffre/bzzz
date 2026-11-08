@@ -1,3 +1,4 @@
+import Toybox.Lang;
 import Toybox.WatchUi;
 
 class StopwatchDelegate extends WatchUi.BehaviorDelegate {
@@ -8,7 +9,7 @@ class StopwatchDelegate extends WatchUi.BehaviorDelegate {
         view = v;
     }
 
-    function onKey(evt as WatchUi.KeyEvent) as Boolean {
+    function onKey(evt as WatchUi.KeyEvent) as Lang.Boolean {
         var key = evt.getKey();
         if (key == WatchUi.KEY_ENTER || key == WatchUi.KEY_START) {
             view.startPause();
@@ -23,17 +24,17 @@ class StopwatchDelegate extends WatchUi.BehaviorDelegate {
         return false;
     }
 
-    function onTap(evt as WatchUi.ClickEvent) as Boolean {
+    function onTap(evt as WatchUi.ClickEvent) as Lang.Boolean {
         view.startPause();
         return true;
     }
 
-    function onMenu() as Boolean {
+    function onMenu() as Lang.Boolean {
         WatchUi.pushView(makeSettingsMenu(), new SettingsMenuDelegate(), WatchUi.SLIDE_UP);
         return true;
     }
 
-    function onBack() as Boolean {
+    function onBack() as Lang.Boolean {
         view.stopTimer();
         return false;
     }

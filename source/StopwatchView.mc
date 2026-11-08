@@ -55,7 +55,7 @@ class StopwatchView extends WatchUi.View {
         }
     }
 
-    function startTimer(intervalSec as Number) as Void {
+    function startTimer(intervalSec as Lang.Number) as Void {
         stopTimer();
         timer = new Timer.Timer();
         timerIntervalSec = intervalSec;
@@ -72,21 +72,21 @@ class StopwatchView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
-    function getElapsedMs() as Number {
+    function getElapsedMs() as Lang.Number {
         if (running) {
             return elapsedMs + (System.getTimer() - startMs);
         }
         return elapsedMs;
     }
 
-    function formatTime(ms as Number) as String {
+    function formatTime(ms as Lang.Number) as Lang.String {
         var totalSec = ms / 1000;
         var minutes = totalSec / 60;
         var seconds = totalSec % 60;
         return Lang.format("$1$:$2$", [pad2(minutes), pad2(seconds)]);
     }
 
-    function pad2(n as Number) as String {
+    function pad2(n as Lang.Number) as Lang.String {
         if (n < 10) {
             return Lang.format("0$1$", [n]);
         }
@@ -98,7 +98,7 @@ class StopwatchView extends WatchUi.View {
         dc.clear();
         var w = dc.getWidth();
         var h = dc.getHeight();
-        dc.setColor(Graphics.COLOR_WHITE);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
 
         var status = "READY";
         if (running) {

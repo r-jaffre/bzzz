@@ -1,10 +1,11 @@
+import Toybox.Lang;
 import Toybox.Attention;
 
 class Alert {
     static const VIBE_DUTY_CYCLE = 40;
     static const VIBE_LENGTH_MS = 150;
 
-    static function tick(mode as Number) as Void {
+    static function tick(mode as Lang.Number) as Void {
         if (mode == Settings.ALERT_SOUND || mode == Settings.ALERT_BOTH) {
             if (Attention has :playTone) {
                 Attention.playTone(Attention.TONE_KEY);

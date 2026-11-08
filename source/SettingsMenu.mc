@@ -15,7 +15,7 @@ class SettingsMenuDelegate extends WatchUi.MenuInputDelegate {
         MenuInputDelegate.initialize();
     }
 
-    function onMenuItem(item as Symbol) as Void {
+    function onMenuItem(item as Lang.Symbol) as Void {
         if (item == :interval) {
             Settings.setIntervalSec(Settings.nextInterval(Settings.getIntervalSec()));
             WatchUi.switchToView(makeSettingsMenu(), new SettingsMenuDelegate(), WatchUi.SLIDE_IMMEDIATE);
@@ -23,11 +23,11 @@ class SettingsMenuDelegate extends WatchUi.MenuInputDelegate {
             Settings.setAlertMode(Settings.nextAlertMode(Settings.getAlertMode()));
             WatchUi.switchToView(makeSettingsMenu(), new SettingsMenuDelegate(), WatchUi.SLIDE_IMMEDIATE);
         } else {
-            WatchUi.popView();
+            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
         }
     }
 
     function onDone() as Void {
-        WatchUi.popView();
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
     }
 }

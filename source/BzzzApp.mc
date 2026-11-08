@@ -1,3 +1,4 @@
+import Toybox.Lang;
 import Toybox.Application;
 import Toybox.WatchUi;
 
@@ -6,8 +7,8 @@ class BzzzApp extends Application.AppBase {
         AppBase.initialize();
     }
 
-    function getInitialView() as Array<WatchUi.Views or WatchUi.InputDelegates> {
+    function getInitialView() as [WatchUi.Views] or [WatchUi.Views, WatchUi.InputDelegates] {
         var view = new StopwatchView();
-        return [view, new StopwatchDelegate(view)] as Array<WatchUi.Views or WatchUi.InputDelegates>;
+        return [view, new StopwatchDelegate(view)];
     }
 }
