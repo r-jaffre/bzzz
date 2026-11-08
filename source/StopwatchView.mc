@@ -120,16 +120,27 @@ class StopwatchView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         var txt = formatTime(getElapsedMs());
         var font = Graphics.FONT_NUMBER_HOT;
-        var tw = dc.getTextWidthInPixels(txt, font);
-        var th = dc.getFontHeight(font);
-        var bmp = new Graphics.BufferedBitmap({:width => tw, :height => th});
-        var bdc = bmp.getDc();
-        bdc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        bdc.clear();
-        bdc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        bdc.drawText(0, th / 2, font, txt, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-        var stretch = 1.25;
-        dc.drawScaledBitmap(w / 2 - (tw * stretch) / 2, h * 46 / 100 - th / 2, tw * stretch, th, bmp);
+        var stretched = false;
+        try {
+            var tw = dc.getTextWidthInPixels(txt, font);
+            var th = dc.getFontHeight(font);
+            if (tw > 0 && th > 0) {
+                var bmp = new Graphics.BufferedBitmap({:width => tw, :height => th});
+                var bdc = bmp.getDc();
+                bdc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+                bdc.clear();
+                bdc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+                bdc.drawText(0, th / 2, font, txt, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+                var stretch = 1.25;
+                dc.drawScaledBitmap(w / 2 - (tw * stretch) / 2, h * 46 / 100 - th / 2, tw * stretch, th, bmp);
+                stretched = true;
+            }
+        } catch (e) {
+            stretched = false;
+        }
+        if (!stretched) {
+            dc.drawText(w / 2, h * 46 / 100, font, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
 
         dc.drawText(w / 2, h * 74 / 100, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
