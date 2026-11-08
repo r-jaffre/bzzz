@@ -10,11 +10,8 @@ class StopwatchView extends WatchUi.View {
     var startMs = 0;
     var elapsedMs = 0;
     var ticks = 0;
-    var tickTimer as Timer.Timer or Null = null;
     var uiTimer as Timer.Timer or Null = null;
     var intervalMs = 0;
-    var nextTickAt = 0;
-    var remainingTickMs = 0;
 
     function initialize() {
         View.initialize();
@@ -33,24 +30,12 @@ class StopwatchView extends WatchUi.View {
             elapsedMs += now - startMs;
             running = false;
             paused = true;
-            remainingTickMs = nextTickAt - now;
-            if (remainingTickMs < 0) {
-                remainingTickMs = 0;
-            }
             stopAllTimers();
         } else {
-            var wasPaused = paused;
             running = true;
             paused = false;
             startMs = now;
             intervalMs = Settings.getIntervalSec() * 1000;
-            if (wasPaused && remainingTickMs > 0) {
-                nextTickAt = now + remainingTickMs;
-                armTick(remainingTickMs);
-            } else {
-                nextTickAt = now + intervalMs;
-                armTick(intervalMs);
-            }
             startUiTimer();
         }
         WatchUi.requestUpdate();
@@ -64,26 +49,13 @@ class StopwatchView extends WatchUi.View {
         ticks = 0;
         startMs = 0;
         intervalMs = 0;
-        nextTickAt = 0;
-        remainingTickMs = 0;
         WatchUi.requestUpdate();
     }
 
     function stopAllTimers() as Void {
-        if (tickTimer != null) {
-            tickTimer.stop();
-        }
         if (uiTimer != null) {
             uiTimer.stop();
         }
-    }
-
-    function armTick(delayMs as Lang.Number) as Void {
-        if (tickTimer == null) {
-            tickTimer = new Timer.Timer();
-        }
-        tickTimer.stop();
-        tickTimer.start(method(:onTick), delayMs, false);
     }
 
     function startUiTimer() as Void {
@@ -91,26 +63,19 @@ class StopwatchView extends WatchUi.View {
             uiTimer = new Timer.Timer();
         }
         uiTimer.stop();
-        uiTimer.start(method(:onUiTick), 1000, true);
-    }
-
-    function onTick() as Void {
-        ticks += 1;
-        Alert.tick(Settings.getAlertMode());
-        var now = System.getTimer();
-        nextTickAt = now + intervalMs;
-        if (running) {
-            armTick(intervalMs);
-        }
-        WatchUi.requestUpdate();
+        uiTimer.start(method(:onUiTick), 250, true);
     }
 
     function onUiTick() as Void {
+        var elapsed = getElapsedMs();
         var iv = Settings.getIntervalSec() * 1000;
-        if (running && iv != intervalMs) {
+        if (iv > 0) {
             intervalMs = iv;
-            nextTickAt = System.getTimer() + iv;
-            armTick(iv);
+        }
+        var tickIndex = elapsed / intervalMs;
+        if (tickIndex > ticks) {
+            ticks = tickIndex;
+            Alert.tick(Settings.getAlertMode());
         }
         WatchUi.requestUpdate();
     }
