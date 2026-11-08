@@ -128,19 +128,52 @@ class StopwatchView extends WatchUi.View {
         drawButtonHints(dc, w, h);
     }
 
+    function hintPoint(cx as Lang.Number, cy as Lang.Number, d as Lang.Number, deg as Lang.Number) as Lang.Array<Lang.Number> {
+        var rad = deg * 0.0174533;
+        return [cx + (d * Math.cos(rad)).toNumber(), cy + (d * Math.sin(rad)).toNumber()];
+    }
+
     function drawButtonHints(dc as Graphics.Dc, w as Lang.Number, h as Lang.Number) as Void {
         var cx = w / 2;
         var cy = h / 2;
         var r = (w < h ? w : h) / 2;
         var d = r * 90 / 100;
-        var gs = w * 45 / 1000;
+        var gs = w * 50 / 1000;
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
-        var angles = [-45, 45, 180, 135];
-        for (var i = 0; i < angles.size(); i++) {
-            var rad = angles[i] * 0.0174533;
-            var x = cx + (d * Math.cos(rad)).toNumber();
-            var y = cy + (d * Math.sin(rad)).toNumber();
-            dc.fillRoundedRectangle(x - gs / 2, y - gs / 2, gs, gs, gs / 4);
+        dc.setPenWidth(2);
+
+        var p = hintPoint(cx, cy, d, -45);
+        var x = p[0];
+        var y = p[1];
+        if (running) {
+            dc.fillRectangle(x - gs / 2, y - gs / 2, gs / 3, gs);
+            dc.fillRectangle(x + gs / 6, y - gs / 2, gs / 3, gs);
+        } else {
+            dc.fillPolygon([[x - gs / 2, y - gs / 2], [x + gs / 2, y], [x - gs / 2, y + gs / 2]] as Lang.Array<Graphics.Point2D>);
+        }
+
+        p = hintPoint(cx, cy, d, 45);
+        x = p[0];
+        y = p[1];
+        dc.drawLine(x + gs / 2, y, x - gs / 2, y);
+        dc.drawLine(x - gs / 2, y, x - gs / 2 + gs / 3, y - gs / 3);
+        dc.drawLine(x - gs / 2, y, x - gs / 2 + gs / 3, y + gs / 3);
+
+        p = hintPoint(cx, cy, d, 180);
+        x = p[0];
+        y = p[1];
+        dc.drawArc(x, y, gs / 2, Graphics.ARC_CLOCKWISE, 20, 340);
+        var tipX = x + (gs / 2 * 94) / 100;
+        var tipY = y - (gs / 2 * 34) / 100;
+        var a = gs / 4;
+        var b = gs / 6;
+        dc.drawLine(tipX, tipY, tipX - (a * 34) / 100 + (b * 94) / 100, tipY - (a * 94) / 100 - (b * 34) / 100);
+        dc.drawLine(tipX, tipY, tipX - (a * 34) / 100 - (b * 94) / 100, tipY - (a * 94) / 100 + (b * 34) / 100);
+
+        var dots = [125, 135, 145];
+        for (var i = 0; i < dots.size(); i++) {
+            p = hintPoint(cx, cy, d, dots[i]);
+            dc.fillCircle(p[0], p[1], gs / 6 > 2 ? gs / 6 : 2);
         }
     }
 }

@@ -72,17 +72,38 @@ def render(path, W, running):
     rect(cx - 55, int(H * TIME_Y / 100) - 28, 110, 56, white)
     rect(cx - 40, int(H * TICKS_Y / 100) - 12, 80, 24, white)
 
-    # System button hints (personality system_icon_dark__hint_button_*):
-    # small gray rounded rects placed close to the screen edge at each
-    # used button position: right-top START, right-bottom BACK,
-    # left-middle UP, left-bottom DOWN.
+    # Button hints at the FR255 button positions, close to the edge:
+    # right-top START (play/pause), right-bottom BACK (arrow),
+    # left-middle UP (reset circle-arrow), left-bottom DOWN (3 dots).
     d = int(r * 0.90)
-    gs = int(W * 0.045)
-    for ang in (-45, 45, 180, 135):
-        rad = math.radians(ang)
-        x = int(cx + d * math.cos(rad))
-        y = int(cy + d * math.sin(rad))
-        rect(x - gs // 2, y - gs // 2, gs, gs, gray)
+    gs = int(W * 0.05)
+
+    def hint_point(deg):
+        rad = math.radians(deg)
+        return int(cx + d * math.cos(rad)), int(cy + d * math.sin(rad))
+
+    x, y = hint_point(-45)
+    if running:
+        rect(x - gs // 2, y - gs // 2, max(1, gs // 3), gs, gray)
+        rect(x + gs // 6, y - gs // 2, max(1, gs // 3), gs, gray)
+    else:
+        tri(x, y, gs // 2, gray)
+
+    x, y = hint_point(45)
+    line(x + gs // 2, y, x - gs // 2, y, gray)
+    line(x - gs // 2, y, x - gs // 2 + gs // 3, y - gs // 3, gray)
+    line(x - gs // 2, y, x - gs // 2 + gs // 3, y + gs // 3, gray)
+
+    x, y = hint_point(180)
+    arc(x, y, gs // 2, 20, 340, gray)
+    tipx = x + int(gs * 0.47); tipy = y - int(gs * 0.17)
+    a = gs // 4; b = gs // 6
+    line(tipx, tipy, tipx - int(a * 0.34) + int(b * 0.94), tipy - int(a * 0.94) - int(b * 0.34), gray)
+    line(tipx, tipy, tipx - int(a * 0.34) - int(b * 0.94), tipy - int(a * 0.94) + int(b * 0.34), gray)
+
+    for ang in (125, 135, 145):
+        x, y = hint_point(ang)
+        disc(x, y, max(2, gs // 6), gray)
 
     raw = b''
     for y in range(H):
