@@ -115,13 +115,13 @@ class StopwatchView extends WatchUi.View {
             statusColor = Graphics.COLOR_YELLOW;
         }
         dc.setColor(statusColor, Graphics.COLOR_BLACK);
-        dc.fillCircle(w / 2, h * 16 / 100, h * 45 / 1000);
+        dc.fillCircle(w / 2, h * 21 / 100, h * 45 / 1000);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         var txt = formatTime(getElapsedMs());
-        dc.drawText(w / 2, h * 46 / 100, Graphics.FONT_NUMBER_HOT, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(w / 2, h * 47 / 100, Graphics.FONT_NUMBER_HOT, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        dc.drawText(w / 2, h * 76 / 100, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(w / 2, h * 74 / 100, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         try {
             drawButtonHints(dc, w, h);
@@ -143,6 +143,21 @@ class StopwatchView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
         dc.setPenWidth(2);
 
+        var re = r * 97 / 100;
+        var zoneAngles = [-30, 150, 180];
+        for (var zi = 0; zi < zoneAngles.size(); zi++) {
+            var za = zoneAngles[zi];
+            var zp = hintPoint(cx, cy, re, za - 22);
+            var zpx = zp[0];
+            var zpy = zp[1];
+            for (var i = 1; i <= 4; i++) {
+                zp = hintPoint(cx, cy, re, za - 22 + i * 11);
+                dc.drawLine(zpx, zpy, zp[0], zp[1]);
+                zpx = zp[0];
+                zpy = zp[1];
+            }
+        }
+
         var p = hintPoint(cx, cy, d, -30);
         var x = p[0];
         var y = p[1];
@@ -156,7 +171,7 @@ class StopwatchView extends WatchUi.View {
         var dots = [176, 180, 184];
         for (var i = 0; i < dots.size(); i++) {
             p = hintPoint(cx, cy, d, dots[i]);
-            dc.fillCircle(p[0], p[1], gs / 4);
+            dc.fillCircle(p[0], p[1], gs / 6 > 2 ? gs / 6 : 2);
         }
 
         p = hintPoint(cx, cy, d, 150);
