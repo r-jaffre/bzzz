@@ -20,17 +20,14 @@ class StopwatchDelegate extends WatchUi.BehaviorDelegate {
         } else if (key == WatchUi.KEY_DOWN) {
             WatchUi.pushView(makeSettingsMenu(), new SettingsMenuDelegate(), WatchUi.SLIDE_UP);
             return true;
+        } else if (key == WatchUi.KEY_ESC) {
+            return false;
         }
         return false;
     }
 
     function onTap(evt as WatchUi.ClickEvent) as Lang.Boolean {
         view.startPause();
-        return true;
-    }
-
-    function onMenu() as Lang.Boolean {
-        WatchUi.pushView(makeSettingsMenu(), new SettingsMenuDelegate(), WatchUi.SLIDE_UP);
         return true;
     }
 

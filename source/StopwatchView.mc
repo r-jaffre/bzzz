@@ -146,12 +146,6 @@ class StopwatchView extends WatchUi.View {
             dc.fillPolygon([[x - s / 2, y - s], [x + s, y], [x - s / 2, y + s]] as Lang.Array<Graphics.Point2D>);
         }
 
-        x = cx - c;
-        y = cy - c;
-        dc.drawLine(x + s, y, x - s, y);
-        dc.drawLine(x - s, y, x - s + s / 2, y - s / 2);
-        dc.drawLine(x - s, y, x - s + s / 2, y + s / 2);
-
         x = cx - d;
         y = cy;
         dc.drawArc(x, y, s, Graphics.ARC_CLOCKWISE, 20, 340);
