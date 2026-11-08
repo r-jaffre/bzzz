@@ -72,28 +72,17 @@ def render(path, W, running):
     rect(cx - 55, int(H * TIME_Y / 100) - 28, 110, 56, white)
     rect(cx - 40, int(H * TICKS_Y / 100) - 12, 80, 24, white)
 
-    d = int(r * D_FRAC / 100)
-    s = int(r * S_FRAC / 100)
-    c = int(d * C_FRAC / 10000)
-
-    x, y = cx + c, cy - c
-    if running:
-        rect(x - s // 2, y - s, max(1, s // 3), 2 * s, gray)
-        rect(x + s // 6, y - s, max(1, s // 3), 2 * s, gray)
-    else:
-        tri(x, y, s, gray)
-
-    x, y = cx - d, cy
-    arc(x, y, s, 20, 340, gray)
-    tipx = x + int(s * 0.94)
-    tipy = y - int(s * 0.34)
-    a = s // 2
-    b = s // 3
-    line(tipx, tipy, tipx - int(a * 0.34) + int(b * 0.94), tipy - int(a * 0.94) - int(b * 0.34), gray)
-    line(tipx, tipy, tipx - int(a * 0.34) - int(b * 0.94), tipy - int(a * 0.94) + int(b * 0.34), gray)
-
-    for cs, sn in DOT_ANGLES:
-        disc(int(cx + d * cs / 10000), int(cy + d * sn / 10000), max(2, s // 4), gray)
+    # System button hints (personality system_icon_dark__hint_button_*):
+    # small gray rounded rects placed close to the screen edge at each
+    # used button position: right-top START, right-bottom BACK,
+    # left-middle UP, left-bottom DOWN.
+    d = int(r * 0.90)
+    gs = int(W * 0.045)
+    for ang in (-45, 45, 180, 135):
+        rad = math.radians(ang)
+        x = int(cx + d * math.cos(rad))
+        y = int(cy + d * math.sin(rad))
+        rect(x - gs // 2, y - gs // 2, gs, gs, gray)
 
     raw = b''
     for y in range(H):

@@ -1,5 +1,6 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.Math;
 import Toybox.System;
 import Toybox.Timer;
 import Toybox.WatchUi;
@@ -124,47 +125,22 @@ class StopwatchView extends WatchUi.View {
 
         dc.drawText(w / 2, h * 74 / 100, Graphics.FONT_LARGE, Lang.format("TICKS $1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        drawButtonIcons(dc, w, h);
+        drawButtonHints(dc, w, h);
     }
 
-    function drawButtonIcons(dc as Graphics.Dc, w as Lang.Number, h as Lang.Number) as Void {
+    function drawButtonHints(dc as Graphics.Dc, w as Lang.Number, h as Lang.Number) as Void {
         var cx = w / 2;
         var cy = h / 2;
         var r = (w < h ? w : h) / 2;
-        var d = r * 78 / 100;
-        var s = r * 9 / 100;
-        var c = (d * 7071) / 10000;
+        var d = r * 90 / 100;
+        var gs = w * 45 / 1000;
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
-        dc.setPenWidth(2);
-
-        var x = cx + c;
-        var y = cy - c;
-        if (running) {
-            dc.fillRectangle(x - s / 2, y - s, s / 3, 2 * s);
-            dc.fillRectangle(x + s / 6, y - s, s / 3, 2 * s);
-        } else {
-            dc.fillPolygon([[x - s / 2, y - s], [x + s, y], [x - s / 2, y + s]] as Lang.Array<Graphics.Point2D>);
-        }
-
-        x = cx - d;
-        y = cy;
-        dc.drawArc(x, y, s, Graphics.ARC_CLOCKWISE, 20, 340);
-        var tipX = x + (s * 94) / 100;
-        var tipY = y - (s * 34) / 100;
-        var a = s / 2;
-        var b = s / 3;
-        dc.drawLine(tipX, tipY, tipX - (a * 34) / 100 + (b * 94) / 100, tipY - (a * 94) / 100 - (b * 34) / 100);
-        dc.drawLine(tipX, tipY, tipX - (a * 34) / 100 - (b * 94) / 100, tipY - (a * 94) / 100 + (b * 34) / 100);
-
-        var dots = [[-4226, 9063], [-7071, 7071], [-9063, 4226]];
-        for (var i = 0; i < 3; i++) {
-            var px = cx + (d * dots[i][0]) / 10000;
-            var py = cy + (d * dots[i][1]) / 10000;
-            var dr = s / 4;
-            if (dr < 2) {
-                dr = 2;
-            }
-            dc.fillCircle(px, py, dr);
+        var angles = [-45, 45, 180, 135];
+        for (var i = 0; i < angles.size(); i++) {
+            var rad = angles[i] * 0.0174533;
+            var x = cx + (d * Math.cos(rad)).toNumber();
+            var y = cy + (d * Math.sin(rad)).toNumber();
+            dc.fillRoundedRectangle(x - gs / 2, y - gs / 2, gs, gs, gs / 4);
         }
     }
 }
