@@ -6,7 +6,7 @@ A Garmin Connect IQ stopwatch app for the **Forerunner 255** (fr255 / fr255s / f
 
 - Press **START** (or tap the screen) to start the stopwatch.
 - Every **N seconds** (default **15 s**, matching the pool pace clock) the watch gives a short buzz and the on-screen tick counter increases, so each buzz = one pool-clock interval of rest.
-- Press **START** again to pause, once more to resume.
+- Press **START** again to pause, once more to resume. Pausing keeps the buzz cadence aligned with the chronometer: the next buzz still lands on the same 15 s grid, not a full interval after resuming.
 - Press **UP** to reset the stopwatch to zero.
 - Press **DOWN** (or the menu button on devices that have one) to open settings.
 - **BACK** exits the app.
