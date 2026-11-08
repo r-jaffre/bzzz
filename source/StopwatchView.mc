@@ -161,8 +161,8 @@ class StopwatchView extends WatchUi.View {
             var zp = hintPoint(cx, cy, re, za - 10);
             var zpx = zp[0];
             var zpy = zp[1];
-            for (var i = 1; i <= 4; i++) {
-                zp = hintPoint(cx, cy, re, za - 10 + i * 5);
+            for (var i = 1; i <= 10; i++) {
+                zp = hintPoint(cx, cy, re, za - 10 + i * 2);
                 dc.drawLine(zpx, zpy, zp[0], zp[1]);
                 zpx = zp[0];
                 zpy = zp[1];
