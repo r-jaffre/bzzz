@@ -75,11 +75,13 @@ def render(path, W, running, paused_state=False):
     gap = int(H * 4 / 100)
     dotY = timeY - th // 2 - gap - dotR
     ticksY = timeY + th // 2 + gap + mh // 2
-    orange = (255, 165, 0, 255)
+    orange = (255, 255, 0, 255)
     if running:
         disc(cx, dotY, dotR, green)
     elif paused_state:
         disc(cx, dotY, dotR, orange)
+        disc(cx - dotR // 2, dotY, dotR // 2, white)
+        disc(cx - dotR // 5, dotY, int(dotR * 0.45), orange)
     else:
         arc(cx, dotY, dotR, 0, 360, white, 2)
     rect(cx - 55, timeY - th // 2, 110, th, white)
