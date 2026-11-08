@@ -18,7 +18,10 @@ class StopwatchView extends WatchUi.View {
         View.initialize();
     }
 
+    var arcsBmp as Graphics.BitmapType or Null = null;
+
     function onLayout(dc as Graphics.Dc) as Void {
+        arcsBmp = WatchUi.loadResource(dc.getWidth() >= 260 ? Rez.Drawables.EdgeArcs260 : Rez.Drawables.EdgeArcs218);
     }
 
     function onShow() as Void {
@@ -110,6 +113,9 @@ class StopwatchView extends WatchUi.View {
         dc.clear();
         var w = dc.getWidth();
         var h = dc.getHeight();
+        if (arcsBmp != null) {
+            dc.drawBitmap(0, 0, arcsBmp);
+        }
 
         var statusColor = Graphics.COLOR_WHITE;
         if (running) {
@@ -152,16 +158,6 @@ class StopwatchView extends WatchUi.View {
         var gs = w * 50 / 1000;
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
         dc.setPenWidth(2);
-
-        var re = r * 97 / 100;
-        var zoneAngles = [-30, 150, 180];
-        for (var zi = 0; zi < zoneAngles.size(); zi++) {
-            var za = zoneAngles[zi];
-            for (var i = 0; i <= 20; i++) {
-                var zp = hintPoint(cx, cy, re, za - 10 + i);
-                dc.fillCircle(zp[0], zp[1], 2);
-            }
-        }
 
         var p = hintPoint(cx, cy, d, -30);
         var x = p[0];
