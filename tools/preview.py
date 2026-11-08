@@ -90,21 +90,17 @@ def render(path, W, running):
     else:
         tri(x, y, gs // 2, gray)
 
-    x, y = hint_point(45)
-    line(x + gs // 2, y, x - gs // 2, y, gray)
-    line(x - gs // 2, y, x - gs // 2 + gs // 3, y - gs // 3, gray)
-    line(x - gs // 2, y, x - gs // 2 + gs // 3, y + gs // 3, gray)
-
     x, y = hint_point(180)
+    for ang in (170, 180, 190):
+        x, y = hint_point(ang)
+        disc(x, y, max(2, gs // 6), gray)
+
+    x, y = hint_point(135)
     arc(x, y, gs // 2, 20, 340, gray)
     tipx = x + int(gs * 0.47); tipy = y - int(gs * 0.17)
     a = gs // 4; b = gs // 6
     line(tipx, tipy, tipx - int(a * 0.34) + int(b * 0.94), tipy - int(a * 0.94) - int(b * 0.34), gray)
     line(tipx, tipy, tipx - int(a * 0.34) - int(b * 0.94), tipy - int(a * 0.94) + int(b * 0.34), gray)
-
-    for ang in (125, 135, 145):
-        x, y = hint_point(ang)
-        disc(x, y, max(2, gs // 6), gray)
 
     raw = b''
     for y in range(H):

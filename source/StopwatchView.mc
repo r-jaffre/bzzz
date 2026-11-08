@@ -152,14 +152,13 @@ class StopwatchView extends WatchUi.View {
             dc.fillPolygon([[x - gs / 2, y - gs / 2], [x + gs / 2, y], [x - gs / 2, y + gs / 2]] as Lang.Array<Graphics.Point2D>);
         }
 
-        p = hintPoint(cx, cy, d, 45);
-        x = p[0];
-        y = p[1];
-        dc.drawLine(x + gs / 2, y, x - gs / 2, y);
-        dc.drawLine(x - gs / 2, y, x - gs / 2 + gs / 3, y - gs / 3);
-        dc.drawLine(x - gs / 2, y, x - gs / 2 + gs / 3, y + gs / 3);
+        var dots = [170, 180, 190];
+        for (var i = 0; i < dots.size(); i++) {
+            p = hintPoint(cx, cy, d, dots[i]);
+            dc.fillCircle(p[0], p[1], gs / 6 > 2 ? gs / 6 : 2);
+        }
 
-        p = hintPoint(cx, cy, d, 180);
+        p = hintPoint(cx, cy, d, 135);
         x = p[0];
         y = p[1];
         dc.drawArc(x, y, gs / 2, Graphics.ARC_CLOCKWISE, 20, 340);
@@ -169,11 +168,5 @@ class StopwatchView extends WatchUi.View {
         var b = gs / 6;
         dc.drawLine(tipX, tipY, tipX - (a * 34) / 100 + (b * 94) / 100, tipY - (a * 94) / 100 - (b * 34) / 100);
         dc.drawLine(tipX, tipY, tipX - (a * 34) / 100 - (b * 94) / 100, tipY - (a * 94) / 100 + (b * 34) / 100);
-
-        var dots = [125, 135, 145];
-        for (var i = 0; i < dots.size(); i++) {
-            p = hintPoint(cx, cy, d, dots[i]);
-            dc.fillCircle(p[0], p[1], gs / 6 > 2 ? gs / 6 : 2);
-        }
     }
 }

@@ -15,10 +15,10 @@ class StopwatchDelegate extends WatchUi.BehaviorDelegate {
             view.startPause();
             return true;
         } else if (key == WatchUi.KEY_UP) {
-            view.reset();
+            WatchUi.pushView(makeSettingsMenu(), new SettingsMenuDelegate(), WatchUi.SLIDE_UP);
             return true;
         } else if (key == WatchUi.KEY_DOWN) {
-            WatchUi.pushView(makeSettingsMenu(), new SettingsMenuDelegate(), WatchUi.SLIDE_UP);
+            view.reset();
             return true;
         } else if (key == WatchUi.KEY_ESC) {
             return false;
