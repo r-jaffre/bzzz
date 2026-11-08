@@ -114,14 +114,21 @@ class StopwatchView extends WatchUi.View {
         } else if (paused) {
             statusColor = Graphics.COLOR_YELLOW;
         }
+        var timeY = h * 47 / 100;
+        var th = dc.getFontHeight(Graphics.FONT_NUMBER_HOT);
+        var mh = dc.getFontHeight(Graphics.FONT_NUMBER_MEDIUM);
+        var dotR = h * 45 / 1000;
+        var gap = h * 8 / 100;
+        var dotY = timeY - th / 2 - gap - dotR;
+        var ticksY = timeY + th / 2 + gap + mh / 2;
         dc.setColor(statusColor, Graphics.COLOR_BLACK);
-        dc.fillCircle(w / 2, h * 21 / 100, h * 45 / 1000);
+        dc.fillCircle(w / 2, dotY, dotR);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         var txt = formatTime(getElapsedMs());
-        dc.drawText(w / 2, h * 47 / 100, Graphics.FONT_NUMBER_HOT, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(w / 2, timeY, Graphics.FONT_NUMBER_HOT, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        dc.drawText(w / 2, h * 74 / 100, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(w / 2, ticksY, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         try {
             drawButtonHints(dc, w, h);
@@ -138,7 +145,7 @@ class StopwatchView extends WatchUi.View {
         var cx = w / 2;
         var cy = h / 2;
         var r = (w < h ? w : h) / 2;
-        var d = r * 90 / 100;
+        var d = r * 85 / 100;
         var gs = w * 50 / 1000;
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
         dc.setPenWidth(2);
@@ -147,11 +154,11 @@ class StopwatchView extends WatchUi.View {
         var zoneAngles = [-30, 150, 180];
         for (var zi = 0; zi < zoneAngles.size(); zi++) {
             var za = zoneAngles[zi];
-            var zp = hintPoint(cx, cy, re, za - 22);
+            var zp = hintPoint(cx, cy, re, za - 11);
             var zpx = zp[0];
             var zpy = zp[1];
-            for (var i = 1; i <= 4; i++) {
-                zp = hintPoint(cx, cy, re, za - 22 + i * 11);
+            for (var i = 1; i <= 2; i++) {
+                zp = hintPoint(cx, cy, re, za - 11 + i * 11);
                 dc.drawLine(zpx, zpy, zp[0], zp[1]);
                 zpx = zp[0];
                 zpy = zp[1];

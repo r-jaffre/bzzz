@@ -69,22 +69,28 @@ def render(path, W, running):
     white = (255, 255, 255, 255)
     gray = (85, 85, 85, 255)
     green = (0, 255, 0, 255)
-    disc(cx, int(H * 21 / 100), int(H * 45 / 1000), green if running else white)
-    rect(cx - 55, int(H * 47 / 100) - 28, 110, 56, white)
-    rect(cx - 20, int(H * 74 / 100) - 14, 40, 28, white)
+    timeY = int(H * 47 / 100)
+    th, mh = 120, 28
+    dotR = int(H * 45 / 1000)
+    gap = int(H * 8 / 100)
+    dotY = timeY - th // 2 - gap - dotR
+    ticksY = timeY + th // 2 + gap + mh // 2
+    disc(cx, dotY, dotR, green if running else white)
+    rect(cx - 55, timeY - th // 2, 110, th, white)
+    rect(cx - 20, ticksY - mh // 2, 40, mh, white)
 
     # Button hints at the real FR255 button angles: START ~ -30deg,
     # UP 180deg (dots), DOWN ~150deg (reset circle+arrow, drawn as
     # line segments). Same geometry as drawButtonHints().
-    d = int(r * 0.90)
+    d = int(r * 0.85)
     gs = int(W * 0.05)
 
     re = int(r * 0.97)
     for za in (-30, 150, 180):
         prev = hint_point(za - 22) if False else None
-        px_, py_ = int(cx + re * math.cos(math.radians(za - 22))), int(cy + re * math.sin(math.radians(za - 22)))
-        for i in range(1, 5):
-            a = za - 22 + i * 11
+        px_, py_ = int(cx + re * math.cos(math.radians(za - 11))), int(cy + re * math.sin(math.radians(za - 11)))
+        for i in range(1, 3):
+            a = za - 11 + i * 11
             cxp = int(cx + re * math.cos(math.radians(a)))
             cyp = int(cy + re * math.sin(math.radians(a)))
             line(px_, py_, cxp, cyp, gray, 2)
