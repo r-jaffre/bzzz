@@ -118,7 +118,7 @@ class StopwatchView extends WatchUi.View {
         var th = dc.getFontHeight(Graphics.FONT_NUMBER_HOT);
         var mh = dc.getFontHeight(Graphics.FONT_NUMBER_MEDIUM);
         var dotR = h * 45 / 1000;
-        var gap = h * 8 / 100;
+        var gap = h * 4 / 100;
         var dotY = timeY - th / 2 - gap - dotR;
         var ticksY = timeY + th / 2 + gap + mh / 2;
         dc.setColor(statusColor, Graphics.COLOR_BLACK);

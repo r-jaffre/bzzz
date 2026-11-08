@@ -72,7 +72,7 @@ def render(path, W, running):
     timeY = int(H * 47 / 100)
     th, mh = 120, 28
     dotR = int(H * 45 / 1000)
-    gap = int(H * 8 / 100)
+    gap = int(H * 4 / 100)
     dotY = timeY - th // 2 - gap - dotR
     ticksY = timeY + th // 2 + gap + mh // 2
     disc(cx, dotY, dotR, green if running else white)
