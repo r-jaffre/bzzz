@@ -10,7 +10,8 @@ class StopwatchView extends WatchUi.View {
     var startMs = 0;
     var elapsedMs = 0;
     var ticks = 0;
-    var timer as Timer.Timer or Null = null;
+    var tickTimer as Timer.Timer or Null = null;
+    var uiTimer as Timer.Timer or Null = null;
     var timerIntervalSec = 0;
 
     function initialize() {
@@ -29,18 +30,19 @@ class StopwatchView extends WatchUi.View {
             elapsedMs += System.getTimer() - startMs;
             running = false;
             paused = true;
-            stopTimer();
+            stopAllTimers();
         } else {
             running = true;
             paused = false;
             startMs = System.getTimer();
-            startTimer(Settings.getIntervalSec());
+            startTickTimer(Settings.getIntervalSec());
+            startUiTimer();
         }
         WatchUi.requestUpdate();
     }
 
     function reset() as Void {
-        stopTimer();
+        stopAllTimers();
         running = false;
         paused = false;
         elapsedMs = 0;
@@ -49,17 +51,30 @@ class StopwatchView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
-    function stopTimer() as Void {
-        if (timer != null) {
-            timer.stop();
+    function stopAllTimers() as Void {
+        if (tickTimer != null) {
+            tickTimer.stop();
+        }
+        if (uiTimer != null) {
+            uiTimer.stop();
         }
     }
 
-    function startTimer(intervalSec as Lang.Number) as Void {
-        stopTimer();
-        timer = new Timer.Timer();
+    function startTickTimer(intervalSec as Lang.Number) as Void {
+        if (tickTimer != null) {
+            tickTimer.stop();
+        }
+        tickTimer = new Timer.Timer();
         timerIntervalSec = intervalSec;
-        timer.start(method(:onTick), intervalSec * 1000, true);
+        tickTimer.start(method(:onTick), intervalSec * 1000, true);
+    }
+
+    function startUiTimer() as Void {
+        if (uiTimer != null) {
+            uiTimer.stop();
+        }
+        uiTimer = new Timer.Timer();
+        uiTimer.start(method(:onUiTick), 1000, true);
     }
 
     function onTick() as Void {
@@ -67,8 +82,12 @@ class StopwatchView extends WatchUi.View {
         Alert.tick(Settings.getAlertMode());
         var intervalSec = Settings.getIntervalSec();
         if (running && intervalSec != timerIntervalSec) {
-            startTimer(intervalSec);
+            startTickTimer(intervalSec);
         }
+        WatchUi.requestUpdate();
+    }
+
+    function onUiTick() as Void {
         WatchUi.requestUpdate();
     }
 
@@ -98,23 +117,22 @@ class StopwatchView extends WatchUi.View {
         dc.clear();
         var w = dc.getWidth();
         var h = dc.getHeight();
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
 
         var status = "READY";
+        var statusColor = Graphics.COLOR_WHITE;
         if (running) {
             status = "RUNNING";
+            statusColor = Graphics.COLOR_GREEN;
         } else if (paused) {
             status = "PAUSED";
+            statusColor = Graphics.COLOR_YELLOW;
         }
-        dc.drawText(w / 2, h * 16 / 100, Graphics.FONT_MEDIUM, status, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.setColor(statusColor, Graphics.COLOR_BLACK);
+        dc.drawText(w / 2, h * 18 / 100, Graphics.FONT_MEDIUM, status, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        dc.drawText(w / 2, h * 40 / 100, Graphics.FONT_NUMBER_HOT, formatTime(getElapsedMs()), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        dc.drawText(w / 2, h * 46 / 100, Graphics.FONT_NUMBER_HOT, formatTime(getElapsedMs()), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        dc.drawText(w / 2, h * 64 / 100, Graphics.FONT_LARGE, Lang.format("TICKS $1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-        dc.drawText(w / 2, h * 78 / 100, Graphics.FONT_SMALL, Lang.format("Every $1$s - $2$", [Settings.getIntervalSec(), Settings.alertModeLabel(Settings.getAlertMode())]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-        dc.drawText(w / 2, h * 88 / 100, Graphics.FONT_TINY, "START start/pause - UP reset", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-        dc.drawText(w / 2, h * 95 / 100, Graphics.FONT_TINY, "DOWN settings - tap screen", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(w / 2, h * 74 / 100, Graphics.FONT_LARGE, Lang.format("TICKS $1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 }

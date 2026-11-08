@@ -35,7 +35,7 @@ class StopwatchDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onBack() as Lang.Boolean {
-        view.stopTimer();
+        view.stopAllTimers();
         return false;
     }
 }
