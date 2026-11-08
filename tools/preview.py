@@ -73,8 +73,9 @@ def render(path, W, running):
     rect(cx - 55, int(H * TIME_Y / 100) - 28, 110, 56, white)
     rect(cx - 40, int(H * TICKS_Y / 100) - 12, 80, 24, white)
 
-    # Button hints at the real FR255 button angles (measured from the
-    # simulator rendering): START ~ -60deg, UP 180deg, DOWN ~145deg.
+    # Button hints at the real FR255 button angles: START ~ -40deg,
+    # UP 180deg (dots), DOWN ~150deg (reset). Circle drawn as line
+    # segments (drawArc uses a different angle convention).
     d = int(r * 0.90)
     gs = int(W * 0.05)
 
@@ -82,32 +83,37 @@ def render(path, W, running):
         rad = math.radians(deg)
         return int(cx + d * math.cos(rad)), int(cy + d * math.sin(rad))
 
-    x, y = hint_point(-60)
+    x, y = hint_point(-40)
     if running:
         rect(x - gs // 2, y - gs // 2, max(1, gs // 3), gs, gray)
         rect(x + gs // 6, y - gs // 2, max(1, gs // 3), gs, gray)
     else:
         tri(x, y, gs // 2, gray)
 
-    for ang in (174, 180, 186):
+    for ang in (176, 180, 184):
         x, y = hint_point(ang)
-        disc(x, y, max(2, gs // 6), gray)
+        disc(x, y, max(1, gs // 8), gray)
 
-    x, y = hint_point(145)
+    x, y = hint_point(150)
     rr = gs // 2
-    arc(x, y, rr, 30, 330, gray)
-    rad = math.radians(330)
-    tipx = x + rr * math.cos(rad); tipy = y + rr * math.sin(rad)
-    tx, ty = -math.sin(rad), math.cos(rad)
-    nx, ny = math.cos(rad), math.sin(rad)
-    a = rr * 0.7; b = rr * 0.5
-    tri3 = [(tipx, tipy),
-            (tipx - a * tx + b * nx, tipy - a * ty + b * ny),
-            (tipx - a * tx - b * nx, tipy - a * ty - b * ny)]
+    prev = (x + rr * math.cos(math.radians(20)), y + rr * math.sin(math.radians(20)))
+    for i in range(1, 33):
+        a = math.radians(20 + i * 10)
+        cur = (x + rr * math.cos(a), y + rr * math.sin(a))
+        line(prev[0], prev[1], cur[0], cur[1], gray, 2)
+        prev = cur
+    ta = math.radians(340)
+    tip = (x + rr * math.cos(ta), y + rr * math.sin(ta))
+    tx, ty = -math.sin(ta), math.cos(ta)
+    nx, ny = math.cos(ta), math.sin(ta)
+    a2 = rr * 0.8; b2 = rr * 0.55
+    tri3 = [tip, (tip[0] - a2 * tx + b2 * nx, tip[1] - a2 * ty + b2 * ny),
+            (tip[0] - a2 * tx - b2 * nx, tip[1] - a2 * ty - b2 * ny)]
     for i in range(3):
         x0, y0 = tri3[i]; x1, y1 = tri3[(i + 1) % 3]
         line(x0, y0, x1, y1, gray, 2)
-    for yy in range(int(min(p[1] for p in tri3)), int(max(p[1] for p in tri3)) + 1):
+    ys = [p[1] for p in tri3]
+    for yy in range(int(min(ys)), int(max(ys)) + 1):
         xs = [p[0] for p in tri3 if abs(p[1] - yy) < 1]
         if len(xs) >= 2:
             for xx in range(int(min(xs)), int(max(xs)) + 1):

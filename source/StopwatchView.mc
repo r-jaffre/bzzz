@@ -142,7 +142,7 @@ class StopwatchView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
         dc.setPenWidth(2);
 
-        var p = hintPoint(cx, cy, d, -60);
+        var p = hintPoint(cx, cy, d, -40);
         var x = p[0];
         var y = p[1];
         if (running) {
@@ -152,30 +152,39 @@ class StopwatchView extends WatchUi.View {
             dc.fillPolygon([[x - gs / 2, y - gs / 2], [x + gs / 2, y], [x - gs / 2, y + gs / 2]] as Lang.Array<Graphics.Point2D>);
         }
 
-        var dots = [174, 180, 186];
+        var dots = [176, 180, 184];
         for (var i = 0; i < dots.size(); i++) {
             p = hintPoint(cx, cy, d, dots[i]);
-            dc.fillCircle(p[0], p[1], gs / 6 > 2 ? gs / 6 : 2);
+            dc.fillCircle(p[0], p[1], gs / 8 > 1 ? gs / 8 : 1);
         }
 
-        p = hintPoint(cx, cy, d, 145);
+        p = hintPoint(cx, cy, d, 150);
         x = p[0];
         y = p[1];
         var rr = gs / 2;
-        dc.drawArc(x, y, rr, Graphics.ARC_CLOCKWISE, 30, 330);
-        var rad = 330 * 0.0174533;
-        var tipX = x + (rr * Math.cos(rad)).toNumber();
-        var tipY = y + (rr * Math.sin(rad)).toNumber();
-        var tx = (-Math.sin(rad)).toNumber();
-        var ty = (Math.cos(rad)).toNumber();
-        var nx = (Math.cos(rad)).toNumber();
-        var ny = (Math.sin(rad)).toNumber();
-        var a = (rr * 7) / 10;
-        var b = rr / 2;
+        var prevX = x + (rr * Math.cos(20 * 0.0174533)).toNumber();
+        var prevY = y + (rr * Math.sin(20 * 0.0174533)).toNumber();
+        for (var i = 1; i <= 32; i++) {
+            var a = (20 + i * 10) * 0.0174533;
+            var sx = x + (rr * Math.cos(a)).toNumber();
+            var sy = y + (rr * Math.sin(a)).toNumber();
+            dc.drawLine(prevX, prevY, sx, sy);
+            prevX = sx;
+            prevY = sy;
+        }
+        var tipA = 340 * 0.0174533;
+        var tipX = x + (rr * Math.cos(tipA)).toNumber();
+        var tipY = y + (rr * Math.sin(tipA)).toNumber();
+        var tx = (-Math.sin(tipA)).toNumber();
+        var ty = (Math.cos(tipA)).toNumber();
+        var nx = (Math.cos(tipA)).toNumber();
+        var ny = (Math.sin(tipA)).toNumber();
+        var a2 = (rr * 8) / 10;
+        var b2 = (rr * 11) / 20;
         dc.fillPolygon([
             [tipX, tipY],
-            [tipX - a * tx + b * nx, tipY - a * ty + b * ny],
-            [tipX - a * tx - b * nx, tipY - a * ty - b * ny]
+            [tipX - a2 * tx + b2 * nx, tipY - a2 * ty + b2 * ny],
+            [tipX - a2 * tx - b2 * nx, tipY - a2 * ty - b2 * ny]
         ] as Lang.Array<Graphics.Point2D>);
     }
 }
