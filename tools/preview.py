@@ -98,6 +98,17 @@ def render(path, W, running):
         rad = math.radians(deg)
         return int(cx + d * math.cos(rad)), int(cy + d * math.sin(rad))
 
+    if running:
+        rp = int(r * 0.93)
+        a = -90
+        px_, py_ = int(cx + rp * math.cos(math.radians(a))), int(cy + rp * math.sin(math.radians(a)))
+        while a < -90 + 144:
+            a += 2
+            qx = int(cx + rp * math.cos(math.radians(a)))
+            qy = int(cy + rp * math.sin(math.radians(a)))
+            line(px_, py_, qx, qy, white, 2)
+            px_, py_ = qx, qy
+
     x, y = hint_point(-30)
     if running:
         rect(x - gs // 2, y - gs // 2, max(1, gs // 3), gs, gray)

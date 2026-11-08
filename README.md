@@ -45,15 +45,18 @@ Sideload: connect the watch over USB (it appears as a mass-storage drive) and co
 
 ## Building from source
 
+The repo has two projects: `app/` (the watch app with glance) and `datafield/` (the in-activity data field). Build each from its own folder (the compiler scans the whole project dir for `.mc` files, so don't build from the repo root).
+
 1. Install the [Connect IQ SDK Manager](https://developer.garmin.com/connect-iq/connect-iq-basics/getting-started/), download SDK 9.2.x and the `fr255` device pack.
 2. Generate a developer key (VS Code "Monkey C: Generate Developer Key", or `openssl genrsa -out developer_key.pem 4096 && openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem -out developer_key.der -nocrypt`), keep it in the repo root (git-ignored, never commit it).
-3. Build a signed `.prg`:
+3. Build signed packages:
 
    ```
-   monkeyc -d fr255 -o bin/Bzzz_fr255.prg -f monkey.jungle -y developer_key.der -w
+   cd app && monkeyc -d fr255 -o ../bin/Bzzz_fr255.prg -f monkey.jungle -y ../developer_key.der -w
+   cd datafield && monkeyc -d fr255 -o ../bin/BzzzDatafield_fr255.prg -f monkey.jungle -y ../developer_key.der -w
    ```
 
-   Replace `-d fr255` with `fr255s` / `fr255m` / `fr255sm` / `fr255_sim` for the other targets.
+   Replace `-d fr255` with `fr255s` / `fr255m` / `fr255sm` (and `fr255_sim` for the app simulator).
 
 ### Run in the simulator from VS Code
 
@@ -64,18 +67,30 @@ Sideload: connect the watch over USB (it appears as a mass-storage drive) and co
 
 Alternatively from the command line with the SDK's `bin` on your PATH: `monkeyc -d fr255_sim -o bin/Bzzz_fr255_sim.prg -f monkey.jungle -y developer_key.der`, start the simulator (`bin/connectiq` / `ConnectIQ.app` / `ConnectIQ.exe`), then `monkeydo bin/Bzzz_fr255_sim.prg fr255`.
 
+## Features beyond the basic stopwatch
+
+- **Glance**: the device app exposes a glance (UP/DOWN from the watch face): status dot, `MM:SS`, tick count. State is mirrored to `Application.Storage` every 5 s while running so the glance still shows it if the app process is killed.
+- **Data field** (`datafield/`): a Connect IQ data field that runs inside activities (e.g. swim) — it follows the activity timer (start/pause/resume/stop/reset) and buzzes every interval. Add it to a swim activity page; it has its own settings (interval/alert/power). Note: `Settings.mc`/`Alert.mc` are duplicated into `datafield/source/` because the compiler scans each project dir separately.
+- **Haptics**: distinct patterns — interval tick = single pulse (length = power), start/pause = double short pulse, reset = one long pulse.
+- **Progress ring**: while running, a thin ring at 93% radius fills over the current interval.
+- **Battery**: UI redraws only when the displayed second changes (tick checks stay at 250 ms so the buzz grid stays exact).
+
 ## Project layout
 
 ```
-manifest.xml                     app metadata, products (fr255 family), entry point
-monkey.jungle                    build configuration
-source/BzzzApp.mc                app entry (AppBase)
-source/StopwatchView.mc          stopwatch state, interval timer, screen drawing
-source/StopwatchDelegate.mc      button/touch handling
-source/SettingsMenu.mc           in-app settings menu (interval, alert mode)
-source/Settings.mc               properties access + presets
-source/Alert.mc                  vibration/tone on each tick
-resources/                       strings, settings, launcher icon
+app/                             watch app project (manifest, source, resources)
+  source/BzzzApp.mc              app entry (AppBase) + glance view
+  source/StopwatchView.mc        stopwatch state, timers, screen drawing, progress ring
+  source/StopwatchDelegate.mc    button/touch handling
+  source/BzzzGlanceView.mc       glance loop view
+  source/BzzzState.mc            shared state + Storage persistence
+  source/SettingsMenu.mc         in-app settings menu (interval, alert, power)
+  source/Settings.mc             properties access + presets
+  source/Alert.mc                vibration/tone patterns
+  resources/                     strings, settings, icons, edge-arc bitmaps
+datafield/                       in-activity data field project (own manifest/resources)
+dist/                            signed prebuilt packages (app + datafield)
+docs/ tools/                     preview PNGs + generator
 ```
 
 ## Possible extension

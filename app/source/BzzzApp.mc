@@ -11,4 +11,8 @@ class BzzzApp extends Application.AppBase {
         var view = new StopwatchView();
         return [view, new StopwatchDelegate(view)];
     }
+
+    function getGlanceView() as [WatchUi.GlanceView] or [WatchUi.GlanceView, WatchUi.GlanceViewDelegate] or Null {
+        return [new BzzzGlanceView()];
+    }
 }

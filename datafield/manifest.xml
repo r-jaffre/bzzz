@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
+    <iq:application entry="BzzzDataField" id="17168ADC092E41E48D74855672E3DDAA" minSdkVersion="3.2.0" name="@Strings.AppName" launcherIcon="@Drawables.LauncherIcon" type="datafield" version="1.0.0">
+        <iq:products>
+            <iq:product id="fr255"/>
+            <iq:product id="fr255s"/>
+            <iq:product id="fr255m"/>
+            <iq:product id="fr255sm"/>
+        </iq:products>
+        <iq:permissions>
+            <iq:uses-permission id="FitContributor"/>
+        </iq:permissions>
+        <iq:languages>
+            <iq:language>eng</iq:language>
+            <iq:language>fre</iq:language>
+        </iq:languages>
+    </iq:application>
+</iq:manifest>

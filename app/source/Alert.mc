@@ -18,7 +18,17 @@ class Alert {
 
     static function confirm() as Void {
         if (Attention has :vibrate) {
-            Attention.vibrate([new Attention.VibeProfile(100, 60)]);
+            Attention.vibrate([
+                new Attention.VibeProfile(100, 60),
+                new Attention.VibeProfile(0, 70),
+                new Attention.VibeProfile(100, 60)
+            ]);
+        }
+    }
+
+    static function resetBuzz() as Void {
+        if (Attention has :vibrate) {
+            Attention.vibrate([new Attention.VibeProfile(100, 250)]);
         }
     }
 }
