@@ -148,11 +148,13 @@ class StopwatchView extends WatchUi.View {
             dc.fillCircle(w / 2, dotY, dotR);
         } else if (paused) {
             dc.setColor(statusColor, Graphics.COLOR_BLACK);
-            dc.fillCircle(w / 2, dotY, dotR);
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-            dc.fillCircle(w / 2 - dotR / 2, dotY, dotR / 2);
-            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
-            dc.fillCircle(w / 2 - dotR / 5, dotY, dotR * 9 / 20);
+            var pts = [];
+            var n = 16;
+            for (var i = 0; i <= n; i++) {
+                var a = (-90 + i * 180 / n) * 0.0174533;
+                pts.add([w / 2 + (dotR * Math.cos(a)).toNumber(), dotY + (dotR * Math.sin(a)).toNumber()]);
+            }
+            dc.fillPolygon(pts as Lang.Array<Graphics.Point2D>);
         } else {
             dc.setColor(statusColor, Graphics.COLOR_BLACK);
             dc.setPenWidth(2);

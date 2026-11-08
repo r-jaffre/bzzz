@@ -79,9 +79,10 @@ def render(path, W, running, paused_state=False):
     if running:
         disc(cx, dotY, dotR, green)
     elif paused_state:
-        disc(cx, dotY, dotR, orange)
-        disc(cx - dotR // 2, dotY, dotR // 2, white)
-        disc(cx - dotR // 5, dotY, int(dotR * 0.45), orange)
+        for yy in range(dotY - dotR, dotY + dotR + 1):
+            for xx in range(cx, cx + dotR + 1):
+                if (xx - cx) ** 2 + (yy - dotY) ** 2 <= dotR * dotR:
+                    put(xx, yy, orange)
     else:
         arc(cx, dotY, dotR, 0, 360, white, 2)
     rect(cx - 55, timeY - th // 2, 110, th, white)
