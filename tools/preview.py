@@ -75,7 +75,10 @@ def render(path, W, running):
     gap = int(H * 4 / 100)
     dotY = timeY - th // 2 - gap - dotR
     ticksY = timeY + th // 2 + gap + mh // 2
-    disc(cx, dotY, dotR, green if running else white)
+    if running:
+        disc(cx, dotY, int(dotR * 1.4), green)
+    else:
+        disc(cx, dotY, int(dotR * 0.75), white)
     rect(cx - 55, timeY - th // 2, 110, th, white)
     rect(cx - 20, ticksY - mh // 2, 40, mh, white)
 
@@ -97,17 +100,6 @@ def render(path, W, running):
     def hint_point(deg):
         rad = math.radians(deg)
         return int(cx + d * math.cos(rad)), int(cy + d * math.sin(rad))
-
-    if running:
-        rp = int(r * 0.93)
-        a = -90
-        px_, py_ = int(cx + rp * math.cos(math.radians(a))), int(cy + rp * math.sin(math.radians(a)))
-        while a < -90 + 144:
-            a += 2
-            qx = int(cx + rp * math.cos(math.radians(a)))
-            qy = int(cy + rp * math.sin(math.radians(a)))
-            line(px_, py_, qx, qy, white, 2)
-            px_, py_ = qx, qy
 
     x, y = hint_point(-30)
     if running:

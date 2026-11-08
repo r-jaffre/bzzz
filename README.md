@@ -71,7 +71,6 @@ Alternatively from the command line with the SDK's `bin` on your PATH: `monkeyc 
 
 ## Features beyond the basic stopwatch
 
-- **Glance**: the device app exposes a glance (UP/DOWN from the watch face): status dot, `MM:SS`, tick count. State is mirrored to `Application.Storage` every 5 s while running so the glance still shows it if the app process is killed.
 - **Data field** (`datafield/`): a Connect IQ data field that runs inside activities (e.g. swim) — it follows the activity timer (start/pause/resume/stop/reset) and buzzes every interval. Add it to a swim activity page; it has its own settings (interval/alert/power). Note: `Settings.mc`/`Alert.mc` are duplicated into `datafield/source/` because the compiler scans each project dir separately.
 - **Haptics**: distinct patterns — interval tick = single pulse (length = power), start/pause = double short pulse, reset = one long pulse.
 - **Progress ring**: while running, a thin ring at 93% radius fills over the current interval.
@@ -84,8 +83,6 @@ app/                             watch app project (manifest, source, resources)
   source/BzzzApp.mc              app entry (AppBase) + glance view
   source/StopwatchView.mc        stopwatch state, timers, screen drawing, progress ring
   source/StopwatchDelegate.mc    button/touch handling
-  source/BzzzGlanceView.mc       glance loop view
-  source/BzzzState.mc            shared state + Storage persistence
   source/SettingsMenu.mc         in-app settings menu (interval, alert, power)
   source/Settings.mc             properties access + presets
   source/Alert.mc                vibration/tone patterns

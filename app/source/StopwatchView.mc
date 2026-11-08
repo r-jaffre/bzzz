@@ -38,10 +38,6 @@ class StopwatchView extends WatchUi.View {
             stopAllTimers();
             Alert.confirm();
             lastSec = -1;
-            BzzzState.running = false;
-            BzzzState.elapsedMs = elapsedMs;
-            BzzzState.ticks = ticks;
-            BzzzState.save();
         } else {
             running = true;
             paused = false;
@@ -50,10 +46,6 @@ class StopwatchView extends WatchUi.View {
             startUiTimer();
             Alert.confirm();
             lastSec = -1;
-            BzzzState.running = true;
-            BzzzState.savedAt = startMs;
-            BzzzState.ticks = ticks;
-            BzzzState.save();
         }
         WatchUi.requestUpdate();
     }
@@ -62,10 +54,6 @@ class StopwatchView extends WatchUi.View {
         stopAllTimers();
         Alert.resetBuzz();
         lastSec = -1;
-        BzzzState.running = false;
-        BzzzState.elapsedMs = 0;
-        BzzzState.ticks = 0;
-        BzzzState.save();
         running = false;
         paused = false;
         elapsedMs = 0;
@@ -103,15 +91,10 @@ class StopwatchView extends WatchUi.View {
             ticks = tickIndex;
             Alert.tick(Settings.getAlertMode(), Settings.getVibePower());
         }
-        BzzzState.running = running;
-        BzzzState.ticks = ticks;
         var sec = elapsed / 1000;
         if (sec != lastSec) {
             lastSec = sec;
             if (running && sec % 5 == 0) {
-                BzzzState.elapsedMs = elapsedMs;
-                BzzzState.savedAt = startMs;
-                BzzzState.save();
             }
             WatchUi.requestUpdate();
         }
@@ -161,33 +144,20 @@ class StopwatchView extends WatchUi.View {
         var dotY = timeY - th / 2 - gap - dotR;
         var ticksY = timeY + th / 2 + gap + mh / 2;
         dc.setColor(statusColor, Graphics.COLOR_BLACK);
-        dc.fillCircle(w / 2, dotY, dotR);
+        if (running) {
+            dc.fillCircle(w / 2, dotY, dotR * 7 / 5);
+        } else if (paused) {
+            dc.setPenWidth(2);
+            dc.drawCircle(w / 2, dotY, dotR);
+        } else {
+            dc.fillCircle(w / 2, dotY, dotR * 3 / 4);
+        }
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         var txt = formatTime(getElapsedMs());
         dc.drawText(w / 2, timeY, Graphics.FONT_NUMBER_HOT, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         dc.drawText(w / 2, ticksY, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-        if (running && intervalMs > 0) {
-            var sweep = (getElapsedMs() % intervalMs) * 360 / intervalMs;
-            if (sweep > 0) {
-                var rp = (w < h ? w : h) * 93 / 200;
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-                dc.setPenWidth(2);
-                var a = -90;
-                var px = w / 2 + (rp * Math.cos(a * 0.0174533)).toNumber();
-                var py = h / 2 + (rp * Math.sin(a * 0.0174533)).toNumber();
-                while (a < -90 + sweep) {
-                    a += 2;
-                    var qx = w / 2 + (rp * Math.cos(a * 0.0174533)).toNumber();
-                    var qy = h / 2 + (rp * Math.sin(a * 0.0174533)).toNumber();
-                    dc.drawLine(px, py, qx, qy);
-                    px = qx;
-                    py = qy;
-                }
-            }
-        }
 
         try {
             drawButtonHints(dc, w, h);
