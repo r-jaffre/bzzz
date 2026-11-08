@@ -115,13 +115,13 @@ class StopwatchView extends WatchUi.View {
             statusColor = Graphics.COLOR_YELLOW;
         }
         dc.setColor(statusColor, Graphics.COLOR_BLACK);
-        dc.fillCircle(w / 2, h * 16 / 100, h * 30 / 1000);
+        dc.fillCircle(w / 2, h * 16 / 100, h * 45 / 1000);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         var txt = formatTime(getElapsedMs());
         dc.drawText(w / 2, h * 46 / 100, Graphics.FONT_NUMBER_HOT, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
-        dc.drawText(w / 2, h * 74 / 100, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(w / 2, h * 76 / 100, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         try {
             drawButtonHints(dc, w, h);

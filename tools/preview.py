@@ -69,9 +69,9 @@ def render(path, W, running):
     white = (255, 255, 255, 255)
     gray = (85, 85, 85, 255)
     green = (0, 255, 0, 255)
-    rect(cx - 30, int(H * STATUS_Y / 100) - 8, 60, 16, green if running else white)
+    disc(cx, int(H * 16 / 100), int(H * 45 / 1000), green if running else white)
     rect(cx - 55, int(H * TIME_Y / 100) - 28, 110, 56, white)
-    rect(cx - 40, int(H * TICKS_Y / 100) - 12, 80, 24, white)
+    rect(cx - 20, int(H * 76 / 100) - 14, 40, 28, white)
 
     # Button hints at the real FR255 button angles: START ~ -30deg,
     # UP 180deg (dots), DOWN ~150deg (reset circle+arrow, drawn as
