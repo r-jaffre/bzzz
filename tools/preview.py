@@ -88,16 +88,11 @@ def render(path, W, running):
     re = int(r * 0.97)
     for za in (-30, 150, 180):
         prev = hint_point(za - 22) if False else None
-        a = za - 10
-        while a <= za + 10:
+        for i in range(21):
+            a = za - 10 + i
             cxp = int(cx + re * math.cos(math.radians(a)))
             cyp = int(cy + re * math.sin(math.radians(a)))
-            arc(cxp, cyp, 0, 0, 0, gray, 0)
-            put(cxp, cyp, gray)
-            for dx in range(3):
-                for dy in range(3):
-                    put(cxp + dx - 1, cyp + dy - 1, gray)
-            a += 1
+            disc(cxp, cyp, 2, gray)
 
     def hint_point(deg):
         rad = math.radians(deg)

@@ -155,20 +155,13 @@ class StopwatchView extends WatchUi.View {
 
         var re = r * 97 / 100;
         var zoneAngles = [-30, 150, 180];
-        dc.setPenWidth(3);
         for (var zi = 0; zi < zoneAngles.size(); zi++) {
             var za = zoneAngles[zi];
-            var zp = hintPoint(cx, cy, re, za - 10);
-            var zpx = zp[0];
-            var zpy = zp[1];
-            for (var i = 1; i <= 10; i++) {
-                zp = hintPoint(cx, cy, re, za - 10 + i * 2);
-                dc.drawLine(zpx, zpy, zp[0], zp[1]);
-                zpx = zp[0];
-                zpy = zp[1];
+            for (var i = 0; i <= 20; i++) {
+                var zp = hintPoint(cx, cy, re, za - 10 + i);
+                dc.fillCircle(zp[0], zp[1], 2);
             }
         }
-        dc.setPenWidth(2);
 
         var p = hintPoint(cx, cy, d, -30);
         var x = p[0];
