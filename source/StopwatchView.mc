@@ -32,18 +32,21 @@ class StopwatchView extends WatchUi.View {
             running = false;
             paused = true;
             stopAllTimers();
+            Alert.confirm();
         } else {
             running = true;
             paused = false;
             startMs = now;
             intervalMs = Settings.getIntervalSec() * 1000;
             startUiTimer();
+            Alert.confirm();
         }
         WatchUi.requestUpdate();
     }
 
     function reset() as Void {
         stopAllTimers();
+        Alert.confirm();
         running = false;
         paused = false;
         elapsedMs = 0;
@@ -76,7 +79,7 @@ class StopwatchView extends WatchUi.View {
         var tickIndex = elapsed / intervalMs;
         if (tickIndex > ticks) {
             ticks = tickIndex;
-            Alert.tick(Settings.getAlertMode());
+            Alert.tick(Settings.getAlertMode(), Settings.getVibePower());
         }
         WatchUi.requestUpdate();
     }
@@ -152,18 +155,20 @@ class StopwatchView extends WatchUi.View {
 
         var re = r * 97 / 100;
         var zoneAngles = [-30, 150, 180];
+        dc.setPenWidth(3);
         for (var zi = 0; zi < zoneAngles.size(); zi++) {
             var za = zoneAngles[zi];
-            var zp = hintPoint(cx, cy, re, za - 11);
+            var zp = hintPoint(cx, cy, re, za - 10);
             var zpx = zp[0];
             var zpy = zp[1];
-            for (var i = 1; i <= 2; i++) {
-                zp = hintPoint(cx, cy, re, za - 11 + i * 11);
+            for (var i = 1; i <= 4; i++) {
+                zp = hintPoint(cx, cy, re, za - 10 + i * 5);
                 dc.drawLine(zpx, zpy, zp[0], zp[1]);
                 zpx = zp[0];
                 zpy = zp[1];
             }
         }
+        dc.setPenWidth(2);
 
         var p = hintPoint(cx, cy, d, -30);
         var x = p[0];

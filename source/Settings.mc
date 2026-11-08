@@ -41,6 +41,18 @@ class Settings {
         return (current + 1) % 3;
     }
 
+    static function getVibePower() as Lang.Number {
+        return Properties.getValue("vibePower") as Lang.Number;
+    }
+
+    static function setVibePower(value as Lang.Number) as Void {
+        Properties.setValue("vibePower", value);
+    }
+
+    static function nextVibePower(current as Lang.Number) as Lang.Number {
+        return current >= 5 ? 1 : current + 1;
+    }
+
     static function alertModeLabel(mode as Lang.Number) as Lang.String {
         if (mode == Settings.ALERT_SOUND) {
             return "Sound";

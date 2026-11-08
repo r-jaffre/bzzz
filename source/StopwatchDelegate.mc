@@ -15,7 +15,8 @@ class StopwatchDelegate extends WatchUi.BehaviorDelegate {
             view.startPause();
             return true;
         } else if (key == WatchUi.KEY_UP) {
-            WatchUi.pushView(makeSettingsMenu(), new SettingsMenuDelegate(), WatchUi.SLIDE_UP);
+            var menu = makeSettingsMenu();
+            WatchUi.pushView(menu, new SettingsMenuDelegate(menu), WatchUi.SLIDE_UP);
             return true;
         } else if (key == WatchUi.KEY_DOWN) {
             view.reset();

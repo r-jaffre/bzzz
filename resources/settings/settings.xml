@@ -19,4 +19,13 @@
             <listEntry value="2">@Strings.AlertBoth</listEntry>
         </settingConfig>
     </setting>
+    <setting propertyKey="@Properties.vibePower" title="@Strings.VibePowerTitle">
+        <settingConfig type="list">
+            <listEntry value="1">@Strings.Power1</listEntry>
+            <listEntry value="2">@Strings.Power2</listEntry>
+            <listEntry value="3">@Strings.Power3</listEntry>
+            <listEntry value="4">@Strings.Power4</listEntry>
+            <listEntry value="5">@Strings.Power5</listEntry>
+        </settingConfig>
+    </setting>
 </settings>

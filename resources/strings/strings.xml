@@ -14,4 +14,10 @@
     <string id="AlertVibrate">Vibrate</string>
     <string id="AlertSound">Sound</string>
     <string id="AlertBoth">Vibrate + sound</string>
+    <string id="VibePowerTitle">Vibration power</string>
+    <string id="Power1">1 - light</string>
+    <string id="Power2">2</string>
+    <string id="Power3">3</string>
+    <string id="Power4">4</string>
+    <string id="Power5">5 - strong</string>
 </strings>

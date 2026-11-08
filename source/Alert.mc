@@ -1,11 +1,8 @@
-import Toybox.Lang;
 import Toybox.Attention;
+import Toybox.Lang;
 
 class Alert {
-    static const VIBE_DUTY_CYCLE = 40;
-    static const VIBE_LENGTH_MS = 150;
-
-    static function tick(mode as Lang.Number) as Void {
+    static function tick(mode as Lang.Number, power as Lang.Number) as Void {
         if (mode == Settings.ALERT_SOUND || mode == Settings.ALERT_BOTH) {
             if (Attention has :playTone) {
                 Attention.playTone(Attention.TONE_KEY);
@@ -13,8 +10,15 @@ class Alert {
         }
         if (mode == Settings.ALERT_VIBRATE || mode == Settings.ALERT_BOTH) {
             if (Attention has :vibrate) {
-                Attention.vibrate([new Attention.VibeProfile(Alert.VIBE_DUTY_CYCLE, Alert.VIBE_LENGTH_MS)]);
+                var len = 100 + power * 40;
+                Attention.vibrate([new Attention.VibeProfile(100, len)]);
             }
+        }
+    }
+
+    static function confirm() as Void {
+        if (Attention has :vibrate) {
+            Attention.vibrate([new Attention.VibeProfile(100, 60)]);
         }
     }
 }
