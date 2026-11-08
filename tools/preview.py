@@ -4,6 +4,7 @@ import zlib, struct, math, os
 # The icon geometry mirrors drawButtonIcons() in source/StopwatchView.mc:
 # keep the two in sync when changing layout.
 #
+# Renders at 2x device resolution so small glyphs stay crisp when viewed on GitHub.
 # Usage: python3 tools/preview.py   -> writes docs/preview-*.png
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'docs')
@@ -121,6 +122,6 @@ def render(path, W, running):
 
 
 os.makedirs(OUT, exist_ok=True)
-render(os.path.join(OUT, 'preview-fr255-ready.png'), 260, False)
-render(os.path.join(OUT, 'preview-fr255-running.png'), 260, True)
-render(os.path.join(OUT, 'preview-fr255s-ready.png'), 218, False)
+render(os.path.join(OUT, 'preview-fr255-ready.png'), 520, False)
+render(os.path.join(OUT, 'preview-fr255-running.png'), 520, True)
+render(os.path.join(OUT, 'preview-fr255s-ready.png'), 436, False)
