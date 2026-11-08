@@ -1,0 +1,22 @@
+<settings>
+    <setting propertyKey="@Properties.intervalSec" title="@Strings.IntervalTitle">
+        <settingConfig type="list">
+            <listEntry value="5">@Strings.Interval5</listEntry>
+            <listEntry value="10">@Strings.Interval10</listEntry>
+            <listEntry value="15">@Strings.Interval15</listEntry>
+            <listEntry value="20">@Strings.Interval20</listEntry>
+            <listEntry value="30">@Strings.Interval30</listEntry>
+            <listEntry value="45">@Strings.Interval45</listEntry>
+            <listEntry value="60">@Strings.Interval60</listEntry>
+            <listEntry value="90">@Strings.Interval90</listEntry>
+            <listEntry value="120">@Strings.Interval120</listEntry>
+        </settingConfig>
+    </setting>
+    <setting propertyKey="@Properties.alertMode" title="@Strings.AlertModeTitle">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.AlertVibrate</listEntry>
+            <listEntry value="1">@Strings.AlertSound</listEntry>
+            <listEntry value="2">@Strings.AlertBoth</listEntry>
+        </settingConfig>
+    </setting>
+</settings>

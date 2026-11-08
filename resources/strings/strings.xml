@@ -1,0 +1,17 @@
+<strings>
+    <string id="AppName">Bzzz</string>
+    <string id="IntervalTitle">Tick interval</string>
+    <string id="Interval5">5 seconds</string>
+    <string id="Interval10">10 seconds</string>
+    <string id="Interval15">15 seconds</string>
+    <string id="Interval20">20 seconds</string>
+    <string id="Interval30">30 seconds</string>
+    <string id="Interval45">45 seconds</string>
+    <string id="Interval60">60 seconds</string>
+    <string id="Interval90">90 seconds</string>
+    <string id="Interval120">120 seconds</string>
+    <string id="AlertModeTitle">Alert on each tick</string>
+    <string id="AlertVibrate">Vibrate</string>
+    <string id="AlertSound">Sound</string>
+    <string id="AlertBoth">Vibrate + sound</string>
+</strings>
