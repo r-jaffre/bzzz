@@ -1,0 +1,6 @@
+bin/
+*.iq
+developer_key*
+*.pem
+*.der
+.DS_Store

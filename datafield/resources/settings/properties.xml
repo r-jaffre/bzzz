@@ -1,0 +1,5 @@
+<properties>
+    <property id="intervalSec" type="number">15</property>
+    <property id="alertMode" type="number">0</property>
+    <property id="vibePower" type="number">3</property>
+</properties>

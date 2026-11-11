@@ -1,0 +1,28 @@
+<strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+    <string id="AppName">Bzzz</string>
+    <string id="IntervalTitle">Intervalle</string>
+    <string id="Interval5">5 secondes</string>
+    <string id="Interval10">10 secondes</string>
+    <string id="Interval15">15 secondes</string>
+    <string id="Interval20">20 secondes</string>
+    <string id="Interval30">30 secondes</string>
+    <string id="Interval45">45 secondes</string>
+    <string id="Interval60">60 secondes</string>
+    <string id="Interval90">90 secondes</string>
+    <string id="Interval120">120 secondes</string>
+    <string id="AlertModeTitle">Alerte à chaque pulsation</string>
+    <string id="AlertVibrate">Vibration</string>
+    <string id="AlertSound">Son</string>
+    <string id="AlertBoth">Vibration + son</string>
+    <string id="VibePowerTitle">Puissance de vibration</string>
+    <string id="Power1">1 - faible</string>
+    <string id="Power2">2</string>
+    <string id="Power3">3</string>
+    <string id="Power4">4</string>
+    <string id="Power5">5 - forte</string>
+    <string id="MenuInterval">Intervalle : $1$s</string>
+    <string id="MenuAlert">Alerte : $1$</string>
+    <string id="MenuPower">Puissance : $1$</string>
+    <string id="MenuBack">Retour</string>
+    <string id="MenuTest">Tester le son</string>
+</strings>
