@@ -5,14 +5,22 @@ import Toybox.System;
 import Toybox.Timer;
 import Toybox.WatchUi;
 
+// Swim/rest interval trainer:
+//   START (idle)  -> swim phase: chrono times the current swim from 0, silent.
+//   START (swim)  -> rest phase: rest time from 0, buzz now, then one buzz per
+//                   interval; the big number counts completed rest intervals.
+//   START (rest)  -> back to a fresh swim phase; rest count and chrono reset.
+//   DOWN          -> reset everything to idle.
 class StopwatchView extends WatchUi.View {
-    var running = false;
-    var paused = false;
-    var startMs = 0;
-    var elapsedMs = 0;
+    static const PHASE_READY = 0;
+    static const PHASE_SWIM = 1;
+    static const PHASE_REST = 2;
+
+    var phase = 0;
+    var phaseStartMs = 0;
     var ticks = 0;
+    var intervalMs = 15000;
     var uiTimer as Timer.Timer or Null = null;
-    var intervalMs = 0;
     var lastSec = -1;
 
     function initialize() {
@@ -29,24 +37,32 @@ class StopwatchView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
-    function startPause() as Void {
+    // START button: advance the phase cycle.
+    function advancePhase() as Void {
         var now = System.getTimer();
-        if (running) {
-            elapsedMs += now - startMs;
-            running = false;
-            paused = true;
-            stopAllTimers();
-            Alert.confirm();
-            lastSec = -1;
-        } else {
-            running = true;
-            paused = false;
-            startMs = now;
+        if (phase == StopwatchView.PHASE_SWIM) {
+            // At the wall: enter the rest phase.
+            phase = StopwatchView.PHASE_REST;
+            phaseStartMs = now;
+            ticks = 0;
+            // Lock the interval for the whole rest phase so the buzz grid
+            // never shifts mid-rest (settings changes apply next phase).
             intervalMs = Settings.getIntervalSec() * 1000;
+            if (intervalMs <= 0) {
+                intervalMs = Settings.DEFAULT_INTERVAL_SEC * 1000;
+            }
+            startUiTimer();
+            // First buzz = rest starts (count stays 0 until a full interval).
+            Alert.tick(Settings.getAlertMode(), Settings.getVibePower());
+        } else {
+            // Idle or leaving rest: new swim phase, everything from zero.
+            phase = StopwatchView.PHASE_SWIM;
+            phaseStartMs = now;
+            ticks = 0;
             startUiTimer();
             Alert.confirm();
-            lastSec = -1;
         }
+        lastSec = -1;
         WatchUi.requestUpdate();
     }
 
@@ -54,12 +70,10 @@ class StopwatchView extends WatchUi.View {
         stopAllTimers();
         Alert.resetBuzz();
         lastSec = -1;
-        running = false;
-        paused = false;
-        elapsedMs = 0;
+        phase = StopwatchView.PHASE_READY;
+        phaseStartMs = 0;
         ticks = 0;
-        startMs = 0;
-        intervalMs = 0;
+        intervalMs = Settings.DEFAULT_INTERVAL_SEC * 1000;
         WatchUi.requestUpdate();
     }
 
@@ -79,32 +93,25 @@ class StopwatchView extends WatchUi.View {
 
     function onUiTick() as Void {
         var elapsed = getElapsedMs();
-        var iv = Settings.getIntervalSec() * 1000;
-        if (iv > 0) {
-            intervalMs = iv;
-        }
-        if (intervalMs <= 0) {
-            intervalMs = 15000;
-        }
-        var tickIndex = elapsed / intervalMs;
-        if (tickIndex > ticks) {
-            ticks = tickIndex;
-            Alert.tick(Settings.getAlertMode(), Settings.getVibePower());
+        if (phase == StopwatchView.PHASE_REST) {
+            var tickIndex = elapsed / intervalMs;
+            if (tickIndex > ticks) {
+                ticks = tickIndex;
+                Alert.tick(Settings.getAlertMode(), Settings.getVibePower());
+            }
         }
         var sec = elapsed / 1000;
         if (sec != lastSec) {
             lastSec = sec;
-            if (running && sec % 5 == 0) {
-            }
             WatchUi.requestUpdate();
         }
     }
 
     function getElapsedMs() as Lang.Number {
-        if (running) {
-            return elapsedMs + (System.getTimer() - startMs);
+        if (phase == StopwatchView.PHASE_READY) {
+            return 0;
         }
-        return elapsedMs;
+        return System.getTimer() - phaseStartMs;
     }
 
     function formatTime(ms as Lang.Number) as Lang.String {
@@ -130,12 +137,34 @@ class StopwatchView extends WatchUi.View {
             dc.drawBitmap(0, 0, arcsBmp);
         }
 
+        var isSwim = phase == StopwatchView.PHASE_SWIM;
+        var isRest = phase == StopwatchView.PHASE_REST;
+
         var statusColor = Graphics.COLOR_WHITE;
-        if (running) {
+        if (isSwim) {
             statusColor = Graphics.COLOR_GREEN;
-        } else if (paused) {
+        } else if (isRest) {
             statusColor = Graphics.COLOR_YELLOW;
         }
+
+        // Choose the big / medium figures for the current view.
+        var chronoTxt = formatTime(getElapsedMs());
+        var bigTxt = "";
+        var medTxt = "";
+        if (Settings.getViewMode() == Settings.VIEW_CHRONO) {
+            // Classic view: phase chrono big, tick count below.
+            bigTxt = chronoTxt;
+            medTxt = Lang.format("$1$", [ticks]);
+        } else if (isRest) {
+            // Intervals view: rest interval count big, rest chrono below.
+            bigTxt = Lang.format("$1$", [ticks]);
+            medTxt = chronoTxt;
+        } else {
+            // Intervals view outside rest: big 0 when idle, swim chrono while swimming.
+            bigTxt = isSwim ? chronoTxt : "0";
+            medTxt = "";
+        }
+
         var timeY = h * 47 / 100;
         var th = dc.getFontHeight(Graphics.FONT_NUMBER_HOT);
         var mh = dc.getFontHeight(Graphics.FONT_NUMBER_MEDIUM);
@@ -143,10 +172,12 @@ class StopwatchView extends WatchUi.View {
         var gap = h * 4 / 100;
         var dotY = timeY - th / 2 - gap - dotR;
         var ticksY = timeY + th / 2 + gap + mh / 2;
-        if (running) {
+
+        // Status dot: ring = ready, filled = swimming, half disc = resting.
+        if (isSwim) {
             dc.setColor(statusColor, Graphics.COLOR_BLACK);
             dc.fillCircle(w / 2, dotY, dotR);
-        } else if (paused) {
+        } else if (isRest) {
             dc.setColor(statusColor, Graphics.COLOR_BLACK);
             var pts = [];
             var n = 16;
@@ -162,10 +193,10 @@ class StopwatchView extends WatchUi.View {
         }
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        var txt = formatTime(getElapsedMs());
-        dc.drawText(w / 2, timeY, Graphics.FONT_NUMBER_HOT, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-        dc.drawText(w / 2, ticksY, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(w / 2, timeY, Graphics.FONT_NUMBER_HOT, bigTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        if (medTxt != "") {
+            dc.drawText(w / 2, ticksY, Graphics.FONT_NUMBER_MEDIUM, medTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
 
         try {
             drawButtonHints(dc, w, h);
@@ -190,10 +221,12 @@ class StopwatchView extends WatchUi.View {
         var p = hintPoint(cx, cy, d, -30);
         var x = p[0];
         var y = p[1];
-        if (running) {
+        if (phase == StopwatchView.PHASE_SWIM) {
+            // Two bars: press to interrupt the swim and start resting.
             dc.fillRectangle(x - gs / 2, y - gs / 2, gs / 3, gs);
             dc.fillRectangle(x + gs / 6, y - gs / 2, gs / 3, gs);
         } else {
+            // Triangle: press to swim.
             dc.fillPolygon([[x - gs / 2, y - gs / 2], [x + gs / 2, y], [x - gs / 2, y + gs / 2]] as Lang.Array<Graphics.Point2D>);
         }
 

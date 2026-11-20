@@ -6,6 +6,8 @@ class Settings {
     static const ALERT_SOUND = 1;
     static const ALERT_BOTH = 2;
     static const DEFAULT_INTERVAL_SEC = 15;
+    static const VIEW_INTERVALS = 0;
+    static const VIEW_CHRONO = 1;
 
     static function getIntervalSec() as Lang.Number {
         var v = Properties.getValue("intervalSec") as Lang.Number;
@@ -56,6 +58,22 @@ class Settings {
 
     static function nextVibePower(current as Lang.Number) as Lang.Number {
         return current >= 5 ? 1 : current + 1;
+    }
+
+    static function getViewMode() as Lang.Number {
+        var v = Properties.getValue("viewMode") as Lang.Number;
+        if (v != Settings.VIEW_INTERVALS && v != Settings.VIEW_CHRONO) {
+            return Settings.VIEW_INTERVALS;
+        }
+        return v;
+    }
+
+    static function setViewMode(value as Lang.Number) as Void {
+        Properties.setValue("viewMode", value);
+    }
+
+    static function nextViewMode(current as Lang.Number) as Lang.Number {
+        return current == Settings.VIEW_INTERVALS ? Settings.VIEW_CHRONO : Settings.VIEW_INTERVALS;
     }
 
 }

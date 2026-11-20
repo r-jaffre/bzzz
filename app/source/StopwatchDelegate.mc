@@ -12,7 +12,7 @@ class StopwatchDelegate extends WatchUi.BehaviorDelegate {
     function onKey(evt as WatchUi.KeyEvent) as Lang.Boolean {
         var key = evt.getKey();
         if (key == WatchUi.KEY_ENTER || key == WatchUi.KEY_START) {
-            view.startPause();
+            view.advancePhase();
             return true;
         } else if (key == WatchUi.KEY_UP) {
             var menu = makeSettingsMenu();
@@ -28,7 +28,7 @@ class StopwatchDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onTap(evt as WatchUi.ClickEvent) as Lang.Boolean {
-        view.startPause();
+        view.advancePhase();
         return true;
     }
 

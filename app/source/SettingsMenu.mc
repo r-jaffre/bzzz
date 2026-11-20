@@ -11,6 +11,13 @@ function alertModeRes(mode as Lang.Number) as Lang.ResourceId {
     return Rez.Strings.AlertVibrate;
 }
 
+function viewModeRes(mode as Lang.Number) as Lang.ResourceId {
+    if (mode == Settings.VIEW_CHRONO) {
+        return Rez.Strings.ViewChrono;
+    }
+    return Rez.Strings.ViewIntervals;
+}
+
 function menuItemLabel(id as Lang.Symbol) as Lang.String {
     if (id == :interval) {
         return Lang.format(WatchUi.loadResource(Rez.Strings.MenuInterval), [Settings.getIntervalSec()]);
@@ -18,6 +25,8 @@ function menuItemLabel(id as Lang.Symbol) as Lang.String {
         return Lang.format(WatchUi.loadResource(Rez.Strings.MenuAlert), [WatchUi.loadResource(alertModeRes(Settings.getAlertMode()))]);
     } else if (id == :power) {
         return Lang.format(WatchUi.loadResource(Rez.Strings.MenuPower), [Settings.getVibePower()]);
+    } else if (id == :view) {
+        return Lang.format(WatchUi.loadResource(Rez.Strings.MenuView), [WatchUi.loadResource(viewModeRes(Settings.getViewMode()))]);
     }
     if (id == :test) {
         return WatchUi.loadResource(Rez.Strings.MenuTest);
@@ -30,6 +39,7 @@ function makeSettingsMenu() as WatchUi.Menu2 {
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:interval), null, :interval, null));
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:alert), null, :alert, null));
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:power), null, :power, null));
+    menu.addItem(new WatchUi.MenuItem(menuItemLabel(:view), null, :view, null));
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:test), null, :test, null));
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:back), null, :back, null));
     return menu;
@@ -54,6 +64,9 @@ class SettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
         } else if (id == :power) {
             Settings.setVibePower(Settings.nextVibePower(Settings.getVibePower()));
             menu.updateItem(new WatchUi.MenuItem(menuItemLabel(:power), null, :power, null), 2);
+        } else if (id == :view) {
+            Settings.setViewMode(Settings.nextViewMode(Settings.getViewMode()));
+            menu.updateItem(new WatchUi.MenuItem(menuItemLabel(:view), null, :view, null), 3);
         } else if (id == :test) {
             Alert.testSound();
         } else {

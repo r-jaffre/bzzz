@@ -1,6 +1,24 @@
 # Bzzz
 
-A Garmin Connect IQ stopwatch app for the **Forerunner 255** (fr255 / fr255s / fr255m / fr255sm) that gives a short vibration tick at a regular interval — built for visually impaired swimmers who want to count rest time against the pool clock without looking at the watch.
+A Garmin Connect IQ app for the **Forerunner 255** (fr255 / fr255s / fr255m / fr255sm) that gives a short vibration tick at a regular interval — built for visually impaired swimmers who want to count rest time against the pool clock without looking at the watch.
+
+The app works like a **swim / rest interval trainer**: one button (START) drives the whole cycle, inspired by the rest detection of Garmin's native pool swim.
+
+- Press **START** (or tap the screen) → **swim phase**: the chrono times your current swim from 0:00, silent (no buzzes while swimming).
+- Press **START** at the wall → **rest phase**: rest time starts from 0 and the watch gives an immediate buzz (the "rest starts" buzz). Then it buzzes every interval (see settings), and the big interval number counts 0 → 1 → 2… so you always know how many pool-clock intervals you've rested without looking.
+- Press **START** to push off again → everything resets (rest count and chrono back to zero) and a fresh swim phase starts.
+- Press **DOWN** (bottom-left button on the FR255) to reset the whole session to idle (white ring dot).
+- Press **UP** (middle-left button on the FR255) to open settings.
+- **BACK** (bottom-right button on the FR255) exits the app via the default back behavior.
+
+The screen is high-contrast (white on black) with a status dot (white ring = ready, green dot = swimming, yellow half-disc = resting) and large digits.
+
+**Views** (settings → `Default view`):
+
+- **Intervals** (default): while resting, a big number shows the count of completed rest intervals, with the rest chrono below it. While swimming it shows the swim chrono. Idle shows a big 0.
+- **Chronometer**: the classic layout — the current phase's chrono big, with the tick count below.
+
+The rest interval is locked at the moment the rest phase starts, so the buzz grid never shifts mid-rest; changing the interval in settings applies from the next rest phase.
 
 ## Languages
 
@@ -8,21 +26,21 @@ English (default) and French (`fre`). French strings live in `resources-fre/stri
 
 ## How it works
 
-- Press **START** (or tap the screen) to start the stopwatch.
-- Every **N seconds** (default **15 s**, matching the pool pace clock) the watch gives a short buzz and the on-screen tick counter increases, so each buzz = one pool-clock interval of rest.
-- Press **START** again to pause, once more to resume. Pausing keeps the buzz cadence aligned with the chronometer: the next buzz still lands on the same 15 s grid, not a full interval after resuming.
+- Press **START** (or tap the screen) to start the swim phase — a short confirmation buzz, then the chrono times your swim in silence.
+- When you stop at the wall, press **START** again: the rest phase begins with a buzz, and every **N seconds** (default **15 s**, matching the pool pace clock) the watch gives a short buzz. Each buzz = one pool-clock interval of rest, and the big on-screen counter increases (0 → 1 → 2…).
+- Press **START** once more to go back to swimming: the rest counter and chrono reset to zero and the swim chrono starts fresh.
 - Press **UP** (middle-left button on the FR255) to open settings.
-- Press **DOWN** (bottom-left button on the FR255) to reset the stopwatch to zero.
-- **BACK** (bottom-right button on the FR255) exits the app via the default back behavior; the top-left LIGHT button does nothing in the app.
-
-The screen is high-contrast (white on black) with large digits: status, elapsed `MM:SS`, tick count, and the current interval/alert mode.
+- Press **DOWN** (bottom-left button on the FR255) to reset the app to idle (long buzz).
+- **BACK** (bottom-right button on the FR255) exits the app via the default back behavior.
 
 ## Settings
 
 Configurable both in the app (DOWN button) and in Garmin Connect / Garmin Express (app settings):
 
-- **Tick interval**: 5, 10, 15 (default), 20, 30, 45, 60, 90 or 120 seconds.
+- **Tick interval**: 5, 10, 15 (default), 20, 30, 45, 60, 90 or 120 seconds — the rest buzz cadence.
 - **Alert on each tick**: Vibrate (default), Sound, or Vibrate + sound.
+- **Vibration power**: 1–5.
+- **Default view**: Intervals (default — big rest-interval count) or Chronometer (classic chrono + tick count).
 
 Notes on alerts:
 
@@ -72,7 +90,7 @@ Alternatively from the command line with the SDK's `bin` on your PATH: `monkeyc 
 ## Features beyond the basic stopwatch
 
 - **Data field** (`datafield/`): a Connect IQ data field that runs inside activities (e.g. swim) — it follows the activity timer (start/pause/resume/stop/reset) and buzzes every interval. Add it to a swim activity page; it has its own settings (interval/alert/power). Note: `Settings.mc`/`Alert.mc` are duplicated into `datafield/source/` because the compiler scans each project dir separately.
-- **Haptics**: distinct patterns — interval tick = single pulse (length = power), start/pause = double short pulse, reset = one long pulse.
+- **Haptics**: distinct patterns — rest tick = single pulse (length = power), swim start = double short pulse, reset = one long pulse.
 - **Progress ring**: while running, a thin ring at 93% radius fills over the current interval.
 - **Battery**: UI redraws only when the displayed second changes (tick checks stay at 250 ms so the buzz grid stays exact).
 
