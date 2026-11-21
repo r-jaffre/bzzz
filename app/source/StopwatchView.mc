@@ -128,95 +128,51 @@ class StopwatchView extends WatchUi.View {
         return Lang.format("$1$", [n]);
     }
 
-    // 7-segment digit table: a b c d e f g (top, top-right, bottom-right,
-    // bottom, bottom-left, top-left, middle), 1 = on.
-    static const SEG_TABLE = [
-        [1, 1, 1, 1, 1, 1, 0], // 0
-        [0, 1, 1, 0, 0, 0, 0], // 1
-        [1, 1, 0, 1, 1, 0, 1], // 2
-        [1, 1, 1, 1, 0, 0, 1], // 3
-        [0, 1, 1, 0, 0, 1, 1], // 4
-        [1, 0, 1, 1, 0, 1, 1], // 5
-        [1, 0, 1, 1, 1, 1, 1], // 6
-        [1, 1, 1, 0, 0, 0, 0], // 7
-        [1, 1, 1, 1, 1, 1, 1], // 8
-        [1, 1, 1, 1, 0, 1, 1]  // 9
-    ];
+    // Huge count rendering: Roboto Black rasterized at three sizes
+    // (resources/fonts/fonts.xml); pick the largest that fits the screen.
+    var bigFonts as Lang.Array<Graphics.FontType> = [];
+    var bigFontsTried = false;
 
-    // Height of the big digits for a given value (device width w, height h).
-    function bigDigitsHeight(w as Lang.Number, h as Lang.Number, value as Lang.Number) as Lang.Number {
-        var n = 1;
-        var rem = value;
-        while (rem >= 10) {
-            n++;
-            rem = rem / 10;
+    function loadBigFonts() as Void {
+        if (!bigFontsTried) {
+            bigFontsTried = true;
+            bigFonts = [
+                WatchUi.loadResource(Rez.Fonts.BigCount215),
+                WatchUi.loadResource(Rez.Fonts.BigCount180),
+                WatchUi.loadResource(Rez.Fonts.BigCount125)
+            ];
         }
-        var gap = w * 3 / 100;
-        var maxW = w * 82 / 100;
-        var dw = (maxW - gap * (n - 1)) / n;
-        var dh = dw * 2;
-        if (dh > h * 60 / 100) {
-            dh = h * 60 / 100;
-        }
-        return dh;
     }
 
-    // Draw value as large scoreboard-style digits centered on cy.
+    // Pick the biggest bundled font whose rendering of txt fits in
+    // (maxW x maxH). Falls back to the smallest bundled font.
+    function pickBigFont(dc as Graphics.Dc, txt as Lang.String, maxW as Lang.Number, maxH as Lang.Number) as Graphics.FontType {
+        loadBigFonts();
+        var best = bigFonts[bigFonts.size() - 1];
+        for (var i = 0; i < bigFonts.size(); i++) {
+            var f = bigFonts[i];
+            var dim = dc.getTextDimensions(txt, f);
+            if (dim[0] <= maxW && dim[1] <= maxH) {
+                return f;
+            }
+            best = f;
+        }
+        return best;
+    }
+
+    // Text height of the big count on this screen (for layout).
+    function bigDigitsHeight(dc as Graphics.Dc, w as Lang.Number, h as Lang.Number, value as Lang.Number) as Lang.Number {
+        var txt = Lang.format("$1$", [value]);
+        var f = pickBigFont(dc, txt, w * 82 / 100, h * 63 / 100);
+        var dim = dc.getTextDimensions(txt, f);
+        return dim[1];
+    }
+
+    // Draw value as huge Roboto Black digits centered on cy.
     function drawBigCount(dc as Graphics.Dc, w as Lang.Number, cy as Lang.Number, value as Lang.Number, h as Lang.Number) as Void {
-        var n = 1;
-        var rem = value;
-        while (rem >= 10) {
-            n++;
-            rem = rem / 10;
-        }
-        var gap = w * 3 / 100;
-        var maxW = w * 82 / 100;
-        var dw = (maxW - gap * (n - 1)) / n;
-        var dh = dw * 2;
-        if (dh > h * 60 / 100) {
-            dh = h * 60 / 100;
-            dw = dh / 2;
-        }
-        var th = dw * 30 / 100;  // segment thickness
-        var totalW = dw * n + gap * (n - 1);
-        var x0 = (w - totalW) / 2;
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        var pow = 1;
-        for (var i = 1; i < n; i++) {
-            pow = pow * 10;
-        }
-        for (var i = 0; i < n; i++) {
-            // Extract digit i (most significant first).
-            var digit = (value / pow) % 10;
-            pow = pow / 10;
-            var segs = StopwatchView.SEG_TABLE[digit];
-            var dx = x0 + i * (dw + gap);
-            var dy = cy - dh / 2;
-            var inset = th / 2;
-            var vLen = dh / 2 - th;
-            var x1 = dx + dw - th;
-            if (segs[0] == 1) {
-                dc.fillRectangle(dx + inset, dy, dw - th, th);            // a: top
-            }
-            if (segs[1] == 1) {
-                dc.fillRectangle(x1, dy + inset, th, vLen);               // b: top-right
-            }
-            if (segs[2] == 1) {
-                dc.fillRectangle(x1, dy + dh / 2, th, vLen);              // c: bottom-right
-            }
-            if (segs[3] == 1) {
-                dc.fillRectangle(dx + inset, dy + dh - th, dw - th, th);  // d: bottom
-            }
-            if (segs[4] == 1) {
-                dc.fillRectangle(dx, dy + dh / 2, th, vLen);               // e: bottom-left
-            }
-            if (segs[5] == 1) {
-                dc.fillRectangle(dx, dy + inset, th, vLen);                // f: top-left
-            }
-            if (segs[6] == 1) {
-                dc.fillRectangle(dx + inset, dy + dh / 2 - inset, dw - th, th); // g: middle
-            }
-        }
+        var txt = Lang.format("$1$", [value]);
+        var f = pickBigFont(dc, txt, w * 82 / 100, h * 63 / 100);
+        dc.drawText(w / 2, cy, f, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
     function onUpdate(dc as Graphics.Dc) as Void {
@@ -265,7 +221,7 @@ class StopwatchView extends WatchUi.View {
         var dotR = h * 45 / 1000;
         var gap = h * 4 / 100;
         // Vertical extent of the big element (custom digits or hot font).
-        var bigH = bigCountValue >= 0 ? bigDigitsHeight(w, h, bigCountValue) : th;
+        var bigH = bigCountValue >= 0 ? bigDigitsHeight(dc, w, h, bigCountValue) : th;
         var dotY = timeY - bigH / 2 - gap - dotR;
         var ticksY = timeY + bigH / 2 + gap + mh / 2;
 
