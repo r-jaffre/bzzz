@@ -85,5 +85,5 @@ def rasterize(size: int) -> None:
 
 
 if __name__ == "__main__":
-    for s in (sys.argv[1:] or ["260", "180", "125"]):
+    for s in (sys.argv[1:] or ["290", "185", "125"]):
         rasterize(int(s))

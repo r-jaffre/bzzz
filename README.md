@@ -15,7 +15,7 @@ The screen is high-contrast (white on black) with a status dot (white ring = rea
 
 **Views** (settings → `Default view`):
 
-- **Intervals** (default): while resting, the screen is just the status dot above **the count of completed rest intervals in huge bundled Roboto Black digits** (a single digit fills ~73% of the FR255 face — far bigger than any stock Connect IQ font). While swimming it shows the swim chrono. Idle shows a big 0. The font ships at three raster sizes (via `tools/genfont.py`) and the app picks the largest that fits, so even very long rests stay readable.
+- **Intervals** (default): **while resting, the interval count is the only thing on screen** — huge bundled Roboto Black digits, a single digit filling ~82% of the FR255 face (two digits ~52%, three ~35%). While swimming it shows the status dot above the swim chrono. Idle shows the status dot above a big 0. The font ships at three raster sizes (via `tools/genfont.py`) and the app picks the largest that fits.
 - **Chronometer**: the classic layout — the current phase's chrono big, with the tick count below.
 
 The rest interval is locked at the moment the rest phase starts, so the buzz grid never shifts mid-rest; changing the interval in settings applies from the next rest phase.

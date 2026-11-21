@@ -137,8 +137,8 @@ class StopwatchView extends WatchUi.View {
         if (!bigFontsTried) {
             bigFontsTried = true;
             bigFonts = [
-                WatchUi.loadResource(Rez.Fonts.BigCount260),
-                WatchUi.loadResource(Rez.Fonts.BigCount180),
+                WatchUi.loadResource(Rez.Fonts.BigCount290),
+                WatchUi.loadResource(Rez.Fonts.BigCount185),
                 WatchUi.loadResource(Rez.Fonts.BigCount125)
             ];
         }
@@ -163,7 +163,7 @@ class StopwatchView extends WatchUi.View {
     // Text height of the big count on this screen (for layout).
     function bigDigitsHeight(dc as Graphics.Dc, w as Lang.Number, h as Lang.Number, value as Lang.Number) as Lang.Number {
         var txt = Lang.format("$1$", [value]);
-        var f = pickBigFont(dc, txt, w * 82 / 100, h * 74 / 100);
+        var f = pickBigFont(dc, txt, w * 86 / 100, h * 88 / 100);
         var dim = dc.getTextDimensions(txt, f);
         return dim[1];
     }
@@ -171,7 +171,7 @@ class StopwatchView extends WatchUi.View {
     // Draw value as huge Roboto Black digits centered on cy.
     function drawBigCount(dc as Graphics.Dc, w as Lang.Number, cy as Lang.Number, value as Lang.Number, h as Lang.Number) as Void {
         var txt = Lang.format("$1$", [value]);
-        var f = pickBigFont(dc, txt, w * 82 / 100, h * 74 / 100);
+        var f = pickBigFont(dc, txt, w * 86 / 100, h * 88 / 100);
         dc.drawText(w / 2, cy, f, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
@@ -197,15 +197,17 @@ class StopwatchView extends WatchUi.View {
         // Choose the big / medium figures for the current view.
         var chronoTxt = formatTime(getElapsedMs());
         var bigHotTxt = "";   // drawn with FONT_NUMBER_HOT
-        var bigCountValue = -1; // >= 0 -> drawn as huge scoreboard digits
+        var bigCountValue = -1; // >= 0 -> drawn as huge Roboto Black digits
         var medTxt = "";
+        var noDot = false;      // rest screen: count only, no status dot
         if (Settings.getViewMode() == Settings.VIEW_CHRONO) {
             // Classic view: phase chrono big, tick count below.
             bigHotTxt = chronoTxt;
             medTxt = Lang.format("$1$", [ticks]);
         } else if (isRest) {
-            // Intervals view: just the rest interval count, as big as it gets.
+            // Intervals view resting: ONLY the rest interval count fills the screen.
             bigCountValue = ticks;
+            noDot = true;
         } else if (isSwim) {
             // Intervals view while swimming: swim chrono big.
             bigHotTxt = chronoTxt;
@@ -223,7 +225,7 @@ class StopwatchView extends WatchUi.View {
         var bigH = bigCountValue >= 0 ? bigDigitsHeight(dc, w, h, bigCountValue) : th;
 
         // Layout: with a medium row -> classic two-row layout around 47%.
-        // Without -> center a stacked block (status dot above, big number below).
+        // Without -> centered stack; while resting ONLY the big number shows.
         var dotY = 0;
         var bigY = 0;
         var medY = -1;
@@ -231,6 +233,8 @@ class StopwatchView extends WatchUi.View {
             bigY = timeY;
             dotY = bigY - bigH / 2 - gap - dotR;
             medY = bigY + bigH / 2 + gap + mh / 2;
+        } else if (noDot) {
+            bigY = h / 2 - h * 2 / 100;
         } else {
             var blockH = dotR * 2 + gap + bigH;
             var blockTop = (h - blockH) / 2 - h * 2 / 100;
@@ -239,7 +243,9 @@ class StopwatchView extends WatchUi.View {
         }
 
         // Status dot: ring = ready, filled = swimming, half disc = resting.
-        if (isSwim) {
+        if (noDot) {
+            // Resting: count only, nothing else on screen.
+        } else if (isSwim) {
             dc.setColor(statusColor, Graphics.COLOR_BLACK);
             dc.fillCircle(w / 2, dotY, dotR);
         } else if (isRest) {
