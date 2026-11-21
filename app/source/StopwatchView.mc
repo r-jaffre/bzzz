@@ -1,6 +1,7 @@
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Math;
+import Toybox.Sensor;
 import Toybox.System;
 import Toybox.Timer;
 import Toybox.WatchUi;
@@ -22,6 +23,8 @@ class StopwatchView extends WatchUi.View {
     var intervalMs = 15000;
     var uiTimer as Timer.Timer or Null = null;
     var lastSec = -1;
+    var detector as AutoDetector or Null = null;
+    var sensorOn = false;
 
     function initialize() {
         View.initialize();
@@ -37,37 +40,120 @@ class StopwatchView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
-    // START button: advance the phase cycle.
+    // START button: advance the phase cycle (always works, even in auto mode).
     function advancePhase() as Void {
-        var now = System.getTimer();
         if (phase == StopwatchView.PHASE_SWIM) {
-            // At the wall: enter the rest phase.
-            phase = StopwatchView.PHASE_REST;
-            phaseStartMs = now;
-            ticks = 0;
-            // Lock the interval for the whole rest phase so the buzz grid
-            // never shifts mid-rest (settings changes apply next phase).
-            intervalMs = Settings.getIntervalSec() * 1000;
-            if (intervalMs <= 0) {
-                intervalMs = Settings.DEFAULT_INTERVAL_SEC * 1000;
-            }
-            startUiTimer();
-            // First buzz = rest starts (count stays 0 until a full interval).
-            Alert.tick(Settings.getAlertMode(), Settings.getVibePower());
+            enterRest();
         } else {
-            // Idle or leaving rest: new swim phase, everything from zero.
-            phase = StopwatchView.PHASE_SWIM;
-            phaseStartMs = now;
-            ticks = 0;
-            startUiTimer();
-            Alert.confirm();
+            enterSwim();
         }
+    }
+
+    // Shared by button presses and auto detection: at the wall = rest begins.
+    function enterRest() as Void {
+        var now = System.getTimer();
+        phase = StopwatchView.PHASE_REST;
+        phaseStartMs = now;
+        ticks = 0;
+        // Lock the interval for the whole rest phase so the buzz grid
+        // never shifts mid-rest (settings changes apply next phase).
+        intervalMs = Settings.getIntervalSec() * 1000;
+        if (intervalMs <= 0) {
+            intervalMs = Settings.DEFAULT_INTERVAL_SEC * 1000;
+        }
+        startUiTimer();
+        // Distinct triple pulse: "rest is counting now" (count starts at 0).
+        Alert.restStart();
         lastSec = -1;
         WatchUi.requestUpdate();
     }
 
+    // Shared by button presses and auto detection: back to a fresh swim.
+    function enterSwim() as Void {
+        var now = System.getTimer();
+        phase = StopwatchView.PHASE_SWIM;
+        phaseStartMs = now;
+        ticks = 0;
+        startUiTimer();
+        if (Settings.getAutoMode() == Settings.AUTO_ON) {
+            startSensor();
+        }
+        // Two medium pulses: new swim phase, rest count wiped.
+        Alert.swimStart();
+        lastSec = -1;
+        WatchUi.requestUpdate();
+    }
+
+    // --- Automatic rest detection (accelerometer) ---
+
+    function startSensor() as Void {
+        if (sensorOn) {
+            return;
+        }
+        if (Sensor has :registerSensorDataListener) {
+            if (detector == null) {
+                detector = new AutoDetector(10, Settings.getMotionThreshold());
+            }
+            detector.reset();
+            try {
+                Sensor.registerSensorDataListener(method(:onSensorData), {
+                    :period => 1,
+                    :accelerometer => {
+                        :enabled => true,
+                        :sampleRate => 10
+                    }
+                });
+                sensorOn = true;
+            } catch (e) {
+                // Fall back to manual mode if the sensor can't start.
+                sensorOn = false;
+            }
+        }
+    }
+
+    function stopSensor() as Void {
+        if (sensorOn && (Sensor has :unregisterSensorDataListener)) {
+            try {
+                Sensor.unregisterSensorDataListener();
+            } catch (e) {
+            }
+        }
+        sensorOn = false;
+    }
+
+    function onSensorData(sensorData as Sensor.SensorData) as Void {
+        if (detector == null) {
+            return;
+        }
+        if (sensorData has :accelerometerData) {
+            var d = sensorData.accelerometerData;
+            if (d != null) {
+                detector.ingest(d.x, d.y, d.z);
+                evaluateAutoTransitions();
+            }
+        }
+    }
+
+    // Auto phase transitions: still too long while swimming -> rest;
+    // moving again while resting -> new swim. Buttons override anytime.
+    function evaluateAutoTransitions() as Void {
+        if (detector == null || Settings.getAutoMode() != Settings.AUTO_ON) {
+            return;
+        }
+        if (phase == StopwatchView.PHASE_SWIM) {
+            if (detector.stillMs >= Settings.getStillSec() * 1000) {
+                enterRest();
+            }
+        } else if (phase == StopwatchView.PHASE_REST) {
+            if (detector.moveMs >= AutoDetector.MOVE_ONSET_MS) {
+                enterSwim();
+            }
+        }
+    }
+
     function reset() as Void {
         stopAllTimers();
+        stopSensor();
         Alert.resetBuzz();
         lastSec = -1;
         phase = StopwatchView.PHASE_READY;
@@ -78,6 +164,7 @@ class StopwatchView extends WatchUi.View {
     }
 
     function stopAllTimers() as Void {
+        stopSensor();
         if (uiTimer != null) {
             uiTimer.stop();
         }
@@ -92,6 +179,13 @@ class StopwatchView extends WatchUi.View {
     }
 
     function onUiTick() as Void {
+        // Keep motion sensing in sync with settings (menu can change mid-session).
+        if (Settings.getAutoMode() == Settings.AUTO_ON && sensorOn == false && phase != StopwatchView.PHASE_READY) {
+            startSensor();
+        }
+        if (detector != null) {
+            detector.thresholdMG = Settings.getMotionThreshold();
+        }
         var elapsed = getElapsedMs();
         if (phase == StopwatchView.PHASE_REST) {
             var tickIndex = elapsed / intervalMs;
@@ -212,8 +306,10 @@ class StopwatchView extends WatchUi.View {
             // Intervals view while swimming: swim chrono big.
             bigHotTxt = chronoTxt;
         } else {
-            // Intervals view idle: a big 0.
-            bigCountValue = 0;
+            // Intervals view ready: the swim chrono at 0:00, ready to go,
+            // with a small reminder of the rest interval below.
+            bigHotTxt = chronoTxt;
+            medTxt = Lang.format(WatchUi.loadResource(Rez.Strings.HintInterval), [Settings.getIntervalSec()]);
         }
 
         var timeY = h * 47 / 100;

@@ -1,21 +1,14 @@
 # Bzzz
 
-A Garmin Connect IQ app for the **Forerunner 255** (fr255 / fr255s / fr255m / fr255sm) that gives a short vibration tick at a regular interval — built for visually impaired swimmers who want to count rest time against the pool clock without looking at the watch.
+A Garmin Connect IQ app for the **Forerunner 255** (fr255 / fr255s / fr255m / fr255sm) that counts rest intervals by vibration — built for visually impaired swimmers and freedivers who want to count rest time without looking at the watch.
 
-The app works like a **swim / rest interval trainer**: one button (START) drives the whole cycle, inspired by the rest detection of Garmin's native pool swim.
+Press **START** once, then the watch runs the session by itself (see [How it works](#how-it-works)). At any time **START** overrides the machine, **UP** (middle-left) opens settings, **DOWN** (bottom-left) resets the session, and **BACK** exits.
 
-- Press **START** (or tap the screen) → **swim phase**: the chrono times your current swim from 0:00, silent (no buzzes while swimming).
-- Press **START** at the wall → **rest phase**: rest time starts from 0 and the watch gives an immediate buzz (the "rest starts" buzz). Then it buzzes every interval (see settings), and the big interval number counts 0 → 1 → 2… so you always know how many pool-clock intervals you've rested without looking.
-- Press **START** to push off again → everything resets (rest count and chrono back to zero) and a fresh swim phase starts.
-- Press **DOWN** (bottom-left button on the FR255) to reset the whole session to idle (white ring dot).
-- Press **UP** (middle-left button on the FR255) to open settings.
-- **BACK** (bottom-right button on the FR255) exits the app via the default back behavior.
-
-The screen is high-contrast (white on black) with a status dot (white ring = ready, green dot = swimming, yellow half-disc = resting) and large digits.
+The screen is high-contrast (white on black) with a status dot (white ring = ready, green dot = swimming) and the rest count in huge bundled Roboto Black digits (LOW vision friendly: a single-digit count fills ~82% of the FR255 face).
 
 **Views** (settings → `Default view`):
 
-- **Intervals** (default): **while resting, the interval count is the only thing on screen** — huge bundled Roboto Black digits, a single digit filling ~82% of the FR255 face (two digits ~52%, three ~35%). While swimming it shows the status dot above the swim chrono. Idle shows the status dot above a big 0. The font ships at three raster sizes (via `tools/genfont.py`) and the app picks the largest that fits.
+- **Intervals** (default): ready shows the swim chrono at 0:00 with a `rest: 15 s` hint; swimming shows the status dot above the swim chrono; **resting shows ONLY the interval count** — huge Roboto Black digits (single digit ~82% of a FR255 face, two digits ~52%, three ~35%). The font ships at three raster sizes (via `tools/genfont.py`) and the app picks the largest that fits.
 - **Chronometer**: the classic layout — the current phase's chrono big, with the tick count below.
 
 The rest interval is locked at the moment the rest phase starts, so the buzz grid never shifts mid-rest; changing the interval in settings applies from the next rest phase.
@@ -26,12 +19,35 @@ English (default) and French (`fre`). French strings live in `resources-fre/stri
 
 ## How it works
 
-- Press **START** (or tap the screen) to start the swim phase — a short confirmation buzz, then the chrono times your swim in silence.
-- When you stop at the wall, press **START** again: the rest phase begins with a buzz, and every **N seconds** (default **15 s**, matching the pool pace clock) the watch gives a short buzz. Each buzz = one pool-clock interval of rest, and the big on-screen counter increases (0 → 1 → 2…).
-- Press **START** once more to go back to swimming: the rest counter and chrono reset to zero and the swim chrono starts fresh.
-- Press **UP** (middle-left button on the FR255) to open settings.
-- Press **DOWN** (bottom-left button on the FR255) to reset the app to idle (long buzz).
-- **BACK** (bottom-right button on the FR255) exits the app via the default back behavior.
+Bzzz is a **hands-free swim/rest interval trainer** for freedivers: press START once, and from then on the watch senses movement and runs the whole cycle by itself.
+
+- **Auto mode** (default, "Mode: Auto (motion)"): the FR255's accelerometer classifies you as **swimming** while you're moving and **resting** once you've been still for the *rest delay* (default 10 s — long enough that a streamlined glide underwater never counts as rest, but a stop at the wall does).
+  - Rest begins **automatically**: a triple buzz, then the giant rest-interval count ticks at your interval.
+  - You kick off for the next dive: after ~3 s of motion the watch is back to **swimming** — count and chrono reset, double buzz, no button touched underwater.
+  - At any moment **START overrides the machine** (press to force a phase change) and **DOWN resets the session**.
+- **Manual mode** ("Mode: Manual (button)"): the same cycle, driven entirely by START presses (the classic behavior).
+
+Buzz vocabulary:
+
+- **Rest starts** — 3 quick pulses
+- **Interval tick** — a single short pulse at every interval of rest (15 s default; the cadence is the product)
+- **Back to swimming** — 2 medium pulses (slate wiped)
+- **Reset** — 1 long pulse
+
+Screens (settings → `Default view`):
+
+- **Intervals** (default): **ready** shows the swim chrono frozen at 0:00 with a small `rest: 15 s` hint; **swimming** shows the status dot above the swim chrono; **resting shows ONLY the rest-interval count** in huge bundled Roboto Black digits (a single digit fills ~82% of a FR255 face).
+- **Chronometer**: the classic two-row layout (chrono big, tick count below).
+
+Tuning (in-app menu or Garmin Connect settings):
+
+- **Tick interval** (5–120 s, default 15 s) — the rest buzz cadence.
+- **Alert** (vibrate / sound / both) and **vibe power** (1–5).
+- **Automation**: Auto (motion) or Manual (button).
+- **Motion sensitivity** (high / medium / low): threshold for what counts as "moving", in case you scull gently while resting or want only strong kicks to count.
+- **Rest delay** (5 / 10 / 15 s): how long you must be still at the wall before rest is declared.
+
+The rest interval is locked at rest start, so the buzz grid never shifts mid-rest; settings changes apply from the next phase.
 
 ## Settings
 

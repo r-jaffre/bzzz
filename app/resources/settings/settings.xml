@@ -34,4 +34,24 @@
             <listEntry value="1">@Strings.ViewChrono</listEntry>
         </settingConfig>
     </setting>
+    <setting propertyKey="@Properties.autoMode" title="@Strings.AutoModeTitle">
+        <settingConfig type="list">
+            <listEntry value="1">@Strings.ModeAuto</listEntry>
+            <listEntry value="0">@Strings.ModeManual</listEntry>
+        </settingConfig>
+    </setting>
+    <setting propertyKey="@Properties.sensitivity" title="@Strings.SensTitle">
+        <settingConfig type="list">
+            <listEntry value="1">@Strings.SensHigh</listEntry>
+            <listEntry value="2">@Strings.SensMedium</listEntry>
+            <listEntry value="3">@Strings.SensLow</listEntry>
+        </settingConfig>
+    </setting>
+    <setting propertyKey="@Properties.stillSec" title="@Strings.StillTitle">
+        <settingConfig type="list">
+            <listEntry value="5">@Strings.Delay5</listEntry>
+            <listEntry value="10">@Strings.Delay10</listEntry>
+            <listEntry value="15">@Strings.Delay15</listEntry>
+        </settingConfig>
+    </setting>
 </settings>

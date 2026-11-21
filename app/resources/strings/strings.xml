@@ -23,10 +23,25 @@
     <string id="ViewModeTitle">Default view</string>
     <string id="ViewIntervals">Intervals</string>
     <string id="ViewChrono">Chronometer</string>
+    <string id="AutoModeTitle">Automation</string>
+    <string id="ModeAuto">Auto (motion)</string>
+    <string id="ModeManual">Manual (button)</string>
+    <string id="SensTitle">Motion sensitivity</string>
+    <string id="SensHigh">High</string>
+    <string id="SensMedium">Medium</string>
+    <string id="SensLow">Low</string>
+    <string id="StillTitle">Rest delay</string>
+    <string id="Delay5">5 seconds</string>
+    <string id="Delay10">10 seconds</string>
+    <string id="Delay15">15 seconds</string>
+    <string id="HintInterval">rest: $1$s</string>
     <string id="MenuInterval">Interval: $1$s</string>
     <string id="MenuAlert">Alert: $1$</string>
     <string id="MenuPower">Vibe power: $1$</string>
     <string id="MenuView">View: $1$</string>
+    <string id="MenuMode">Mode: $1$</string>
+    <string id="MenuSensitivity">Sensitivity: $1$</string>
+    <string id="MenuStillDelay">Rest delay: $1$s</string>
     <string id="MenuBack">Back</string>
     <string id="MenuTest">Test sound</string>
 </strings>

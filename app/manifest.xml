@@ -11,5 +11,8 @@
             <iq:language>eng</iq:language>
             <iq:language>fre</iq:language>
         </iq:languages>
+        <iq:permissions>
+            <iq:uses-permission id="Sensor"/>
+        </iq:permissions>
     </iq:application>
 </iq:manifest>

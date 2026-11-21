@@ -3,4 +3,7 @@
     <property id="alertMode" type="number">0</property>
     <property id="vibePower" type="number">3</property>
     <property id="viewMode" type="number">0</property>
+    <property id="autoMode" type="number">1</property>
+    <property id="sensitivity" type="number">2</property>
+    <property id="stillSec" type="number">10</property>
 </properties>
