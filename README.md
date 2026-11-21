@@ -22,7 +22,7 @@ English (default) and French (`fre`). French strings live in `resources-fre/stri
 Bzzz is a **hands-free swim/rest interval trainer** for freedivers: press START once, and from then on the watch senses movement and runs the whole cycle by itself.
 
 - **Auto mode** (default, "Mode: Auto (motion)"): the FR255's accelerometer classifies you as **swimming** while you're moving and **resting** once you've been still for the *rest delay* (default 10 s — long enough that a streamlined glide underwater never counts as rest, but a stop at the wall does).
-  - Rest begins **automatically**: a triple buzz, then the giant rest-interval count ticks at your interval.
+  - Rest begins **automatically** after the stillness delay: a triple buzz, then the giant rest-interval count ticks at your interval. **The rest clock is backdated to when you actually stopped moving**, so the first interval buzz lands exactly one interval (15 s by default) after you stopped - the count matches the pool clock, not the detection delay.
   - You kick off for the next dive: after ~3 s of motion the watch is back to **swimming** — count and chrono reset, double buzz, no button touched underwater.
   - At any moment **START overrides the machine** (press to force a phase change) and **DOWN resets the session**.
 - **Manual mode** ("Mode: Manual (button)"): the same cycle, driven entirely by START presses (the classic behavior).

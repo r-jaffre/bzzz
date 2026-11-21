@@ -43,17 +43,25 @@ class StopwatchView extends WatchUi.View {
     // START button: advance the phase cycle (always works, even in auto mode).
     function advancePhase() as Void {
         if (phase == StopwatchView.PHASE_SWIM) {
-            enterRest();
+            enterRest(false);
         } else {
             enterSwim();
         }
     }
 
     // Shared by button presses and auto detection: at the wall = rest begins.
-    function enterRest() as Void {
+    // For auto detection, backdate the rest clock to when movement ACTUALLY
+    // stopped, so the interval grid is aligned with the true rest start
+    // (the first interval buzz lands a full interval after the swimmer
+    // stopped, not a full interval after detection).
+    function enterRest(backdate as Lang.Boolean) as Void {
         var now = System.getTimer();
         phase = StopwatchView.PHASE_REST;
-        phaseStartMs = now;
+        if (backdate && detector != null) {
+            phaseStartMs = now - detector.stillMs;
+        } else {
+            phaseStartMs = now;
+        }
         ticks = 0;
         // Lock the interval for the whole rest phase so the buzz grid
         // never shifts mid-rest (settings changes apply next phase).
@@ -61,8 +69,16 @@ class StopwatchView extends WatchUi.View {
         if (intervalMs <= 0) {
             intervalMs = Settings.DEFAULT_INTERVAL_SEC * 1000;
         }
+        // Backdated rest may have already crossed whole intervals while
+        // stillness was being confirmed (short interval + long delay):
+        // adopt that count silently; the next grid slot buzzes as usual.
+        var elapsed = getElapsedMs();
+        var startCount = elapsed / intervalMs;
+        if (startCount > ticks) {
+            ticks = startCount;
+        }
         startUiTimer();
-        // Distinct triple pulse: "rest is counting now" (count starts at 0).
+        // Distinct triple pulse: "rest is counting now".
         Alert.restStart();
         lastSec = -1;
         WatchUi.requestUpdate();
@@ -142,7 +158,7 @@ class StopwatchView extends WatchUi.View {
         }
         if (phase == StopwatchView.PHASE_SWIM) {
             if (detector.stillMs >= Settings.getStillSec() * 1000) {
-                enterRest();
+                enterRest(true);
             }
         } else if (phase == StopwatchView.PHASE_REST) {
             if (detector.moveMs >= AutoDetector.MOVE_ONSET_MS) {
