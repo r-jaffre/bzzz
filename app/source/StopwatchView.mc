@@ -128,6 +128,97 @@ class StopwatchView extends WatchUi.View {
         return Lang.format("$1$", [n]);
     }
 
+    // 7-segment digit table: a b c d e f g (top, top-right, bottom-right,
+    // bottom, bottom-left, top-left, middle), 1 = on.
+    static const SEG_TABLE = [
+        [1, 1, 1, 1, 1, 1, 0], // 0
+        [0, 1, 1, 0, 0, 0, 0], // 1
+        [1, 1, 0, 1, 1, 0, 1], // 2
+        [1, 1, 1, 1, 0, 0, 1], // 3
+        [0, 1, 1, 0, 0, 1, 1], // 4
+        [1, 0, 1, 1, 0, 1, 1], // 5
+        [1, 0, 1, 1, 1, 1, 1], // 6
+        [1, 1, 1, 0, 0, 0, 0], // 7
+        [1, 1, 1, 1, 1, 1, 1], // 8
+        [1, 1, 1, 1, 0, 1, 1]  // 9
+    ];
+
+    // Height of the big digits for a given value (device width w, height h).
+    function bigDigitsHeight(w as Lang.Number, h as Lang.Number, value as Lang.Number) as Lang.Number {
+        var n = 1;
+        var rem = value;
+        while (rem >= 10) {
+            n++;
+            rem = rem / 10;
+        }
+        var gap = w * 3 / 100;
+        var maxW = w * 82 / 100;
+        var dw = (maxW - gap * (n - 1)) / n;
+        var dh = dw * 2;
+        if (dh > h * 60 / 100) {
+            dh = h * 60 / 100;
+        }
+        return dh;
+    }
+
+    // Draw value as large scoreboard-style digits centered on cy.
+    function drawBigCount(dc as Graphics.Dc, w as Lang.Number, cy as Lang.Number, value as Lang.Number, h as Lang.Number) as Void {
+        var n = 1;
+        var rem = value;
+        while (rem >= 10) {
+            n++;
+            rem = rem / 10;
+        }
+        var gap = w * 3 / 100;
+        var maxW = w * 82 / 100;
+        var dw = (maxW - gap * (n - 1)) / n;
+        var dh = dw * 2;
+        if (dh > h * 60 / 100) {
+            dh = h * 60 / 100;
+            dw = dh / 2;
+        }
+        var th = dw * 30 / 100;  // segment thickness
+        var totalW = dw * n + gap * (n - 1);
+        var x0 = (w - totalW) / 2;
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        var pow = 1;
+        for (var i = 1; i < n; i++) {
+            pow = pow * 10;
+        }
+        for (var i = 0; i < n; i++) {
+            // Extract digit i (most significant first).
+            var digit = (value / pow) % 10;
+            pow = pow / 10;
+            var segs = StopwatchView.SEG_TABLE[digit];
+            var dx = x0 + i * (dw + gap);
+            var dy = cy - dh / 2;
+            var inset = th / 2;
+            var vLen = dh / 2 - th;
+            var x1 = dx + dw - th;
+            if (segs[0] == 1) {
+                dc.fillRectangle(dx + inset, dy, dw - th, th);            // a: top
+            }
+            if (segs[1] == 1) {
+                dc.fillRectangle(x1, dy + inset, th, vLen);               // b: top-right
+            }
+            if (segs[2] == 1) {
+                dc.fillRectangle(x1, dy + dh / 2, th, vLen);              // c: bottom-right
+            }
+            if (segs[3] == 1) {
+                dc.fillRectangle(dx + inset, dy + dh - th, dw - th, th);  // d: bottom
+            }
+            if (segs[4] == 1) {
+                dc.fillRectangle(dx, dy + dh / 2, th, vLen);               // e: bottom-left
+            }
+            if (segs[5] == 1) {
+                dc.fillRectangle(dx, dy + inset, th, vLen);                // f: top-left
+            }
+            if (segs[6] == 1) {
+                dc.fillRectangle(dx + inset, dy + dh / 2 - inset, dw - th, th); // g: middle
+            }
+        }
+    }
+
     function onUpdate(dc as Graphics.Dc) as Void {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
@@ -149,20 +240,23 @@ class StopwatchView extends WatchUi.View {
 
         // Choose the big / medium figures for the current view.
         var chronoTxt = formatTime(getElapsedMs());
-        var bigTxt = "";
+        var bigHotTxt = "";   // drawn with FONT_NUMBER_HOT
+        var bigCountValue = -1; // >= 0 -> drawn as huge scoreboard digits
         var medTxt = "";
         if (Settings.getViewMode() == Settings.VIEW_CHRONO) {
             // Classic view: phase chrono big, tick count below.
-            bigTxt = chronoTxt;
+            bigHotTxt = chronoTxt;
             medTxt = Lang.format("$1$", [ticks]);
         } else if (isRest) {
             // Intervals view: rest interval count big, rest chrono below.
-            bigTxt = Lang.format("$1$", [ticks]);
+            bigCountValue = ticks;
             medTxt = chronoTxt;
+        } else if (isSwim) {
+            // Intervals view while swimming: swim chrono big.
+            bigHotTxt = chronoTxt;
         } else {
-            // Intervals view outside rest: big 0 when idle, swim chrono while swimming.
-            bigTxt = isSwim ? chronoTxt : "0";
-            medTxt = "";
+            // Intervals view idle: a big 0.
+            bigCountValue = 0;
         }
 
         var timeY = h * 47 / 100;
@@ -170,8 +264,10 @@ class StopwatchView extends WatchUi.View {
         var mh = dc.getFontHeight(Graphics.FONT_NUMBER_MEDIUM);
         var dotR = h * 45 / 1000;
         var gap = h * 4 / 100;
-        var dotY = timeY - th / 2 - gap - dotR;
-        var ticksY = timeY + th / 2 + gap + mh / 2;
+        // Vertical extent of the big element (custom digits or hot font).
+        var bigH = bigCountValue >= 0 ? bigDigitsHeight(w, h, bigCountValue) : th;
+        var dotY = timeY - bigH / 2 - gap - dotR;
+        var ticksY = timeY + bigH / 2 + gap + mh / 2;
 
         // Status dot: ring = ready, filled = swimming, half disc = resting.
         if (isSwim) {
@@ -193,7 +289,11 @@ class StopwatchView extends WatchUi.View {
         }
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        dc.drawText(w / 2, timeY, Graphics.FONT_NUMBER_HOT, bigTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        if (bigCountValue >= 0) {
+            drawBigCount(dc, w, timeY, bigCountValue, h);
+        } else {
+            dc.drawText(w / 2, timeY, Graphics.FONT_NUMBER_HOT, bigHotTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
         if (medTxt != "") {
             dc.drawText(w / 2, ticksY, Graphics.FONT_NUMBER_MEDIUM, medTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }

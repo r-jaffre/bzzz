@@ -15,7 +15,7 @@ The screen is high-contrast (white on black) with a status dot (white ring = rea
 
 **Views** (settings → `Default view`):
 
-- **Intervals** (default): while resting, a big number shows the count of completed rest intervals, with the rest chrono below it. While swimming it shows the swim chrono. Idle shows a big 0.
+- **Intervals** (default): while resting, the count of completed rest intervals is drawn as **huge pace-clock style 7-segment digits** (~60% of the screen height — bigger than any stock font), with the rest chrono below it. While swimming it shows the swim chrono. Idle shows a big 0.
 - **Chronometer**: the classic layout — the current phase's chrono big, with the tick count below.
 
 The rest interval is locked at the moment the rest phase starts, so the buzz grid never shifts mid-rest; changing the interval in settings applies from the next rest phase.
