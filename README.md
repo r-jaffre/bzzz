@@ -49,43 +49,47 @@ Notes on alerts:
 
 ## Prebuilt packages
 
-Signed `.prg` files built with Connect IQ SDK 9.2.0 are committed under [`dist/`](dist/):
+Signed `.prg` files built with Connect IQ SDK 9.3.0 are committed under [`dist/`](dist/):
 
 - `dist/Bzzz_fr255.prg` — Forerunner 255
 - `dist/Bzzz_fr255s.prg` — Forerunner 255s
 - `dist/Bzzz_fr255m.prg` — Forerunner 255 Music
 - `dist/Bzzz_fr255sm.prg` — Forerunner 255s Music
-- `dist/Bzzz_fr255_sim.prg` — simulator build (`fr255_sim`, for use with `monkeydo`)
+- `dist/Bzzz_fr255_sim.prg` — simulator build (fr255 device, for use with `monkeydo`)
 
 ## Installing on the watch
 
 If the watch ever shows **"Manifest file is not in the correct format"** when starting a sideloaded app: the loader keeps stale metadata keyed to the app UUID. Fix = remove the app on the watch (app list → hold → Remove App), restart the watch, then sideload a build whose manifest has a **fresh app UUID** and a fresh `.prg` filename. (This repo now uses a fresh UUID after hitting exactly that error.)
 
-Sideload: connect the watch over USB (it appears as a mass-storage drive) and copy the matching `dist/Bzzz_fr255.prg` into `GARMIN/APPS/` on the watch. The app then appears in the watch's app list. (Built with SDK 9.2.0, signed with a locally generated developer key, so this works for sideloading; store submission would use a Garmin-issued key.)
+Sideload: connect the watch over USB (it appears as a mass-storage drive) and copy the matching `dist/Bzzz_fr255.prg` into `GARMIN/APPS/` on the watch. The app then appears in the watch's app list. (Built with SDK 9.3.0, signed with a locally generated developer key, so this works for sideloading; store submission would use a Garmin-issued key.)
 
 ## Building from source
 
 The repo has two projects: `app/` (the watch app with glance) and `datafield/` (the in-activity data field). Build each from its own folder (the compiler scans the whole project dir for `.mc` files, so don't build from the repo root).
 
-1. Install the [Connect IQ SDK Manager](https://developer.garmin.com/connect-iq/connect-iq-basics/getting-started/), download SDK 9.2.x and the `fr255` device pack.
-2. Generate a developer key (VS Code "Monkey C: Generate Developer Key", or `openssl genrsa -out developer_key.pem 4096 && openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem -out developer_key.der -nocrypt`), keep it in the repo root (git-ignored, never commit it).
-3. Build signed packages:
+1. Install the [Connect IQ SDK Manager](https://developer.garmin.com/connect-iq/connect-iq-basics/getting-started/) — on macOS `brew install --cask connectiq-sdk-manager` works — log in with a Garmin account, download an SDK (this machine has **9.3.0**) and the `fr255` device packs (fr255 / fr255s / fr255m / fr255sm). The manager keeps everything under `~/Library/Application Support/Garmin/ConnectIQ/` (`Sdks/` + `Devices/`). `monkeyc` resolves devices from that `Devices/` folder automatically.
+2. Install Java 17 (`brew install openjdk@17`) — `monkeyc` needs `java` on its PATH.
+3. Generate a developer key (VS Code "Monkey C: Generate Developer Key", or `openssl genrsa -out developer_key.pem 4096 && openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem -out developer_key.der -nocrypt`), keep it in the repo root (git-ignored, never commit it).
+4. Build signed packages (put the SDK's `bin` and Java on your PATH first):
 
    ```
+   export CIQ="$HOME/Library/Application Support/Garmin/ConnectIQ"
+   export PATH="$CIQ/Sdks/connectiq-sdk-mac-9.3.0-2026-10-20-95888f262/bin:$(/usr/libexec/java_home -v 17)/bin:$PATH"
+
    cd app && monkeyc -d fr255 -o ../bin/Bzzz_fr255.prg -f monkey.jungle -y ../developer_key.der -w
    cd datafield && monkeyc -d fr255 -o ../bin/BzzzDatafield_fr255.prg -f monkey.jungle -y ../developer_key.der -w
    ```
 
-   Replace `-d fr255` with `fr255s` / `fr255m` / `fr255sm` (and `fr255_sim` for the app simulator).
+   Replace `-d fr255` with `fr255s` / `fr255m` / `fr255sm`. (Avoid `-o ../dist/...`: the compiler drops debug byproducts next to the output, and `dist/` holds only signed `.prg` files.)
 
 ### Run in the simulator from VS Code
 
-1. Install the **Monkey C** extension (Garmin) in VS Code, and make sure the SDK Manager has SDK 9.2.0 + the Forerunner 255 device pack installed. Run Command Palette → **Monkey C: Verify Installation** to check the extension sees the SDK and Java.
+1. Install the **Monkey C** extension (Garmin) in VS Code, and make sure the SDK Manager has SDK 9.3.0 + the Forerunner 255 device packs installed. Run Command Palette → **Monkey C: Verify Installation** to check the extension sees the SDK and Java.
 2. Command Palette → **Monkey C: Generate Developer Key** once (stores the key path in settings; needed to sign builds).
 3. Open any `source/*.mc` file, then use the **Run and Debug** sidebar (Ctrl+Shift+D) and press the play button, or **Run → Run Without Debugging (Ctrl+F5)**. Pick `fr255` when prompted — the simulator starts with the app loaded. The repo ships a ready-made `.vscode/launch.json` ("Run App (fr255)" / "Run App (pick device)").
 4. To just build without running: Command Palette → **Monkey C: Build Current Project**.
 
-Alternatively from the command line with the SDK's `bin` on your PATH: `monkeyc -d fr255_sim -o bin/Bzzz_fr255_sim.prg -f monkey.jungle -y developer_key.der`, start the simulator (`bin/connectiq` / `ConnectIQ.app` / `ConnectIQ.exe`), then `monkeydo bin/Bzzz_fr255_sim.prg fr255`.
+Alternatively from the command line with the SDK's `bin` on your PATH: start the simulator (`ConnectIQ.app` in the SDK's `bin/`), then `monkeydo bin/Bzzz_fr255.prg fr255` — a regular fr255 build runs in the simulator.
 
 ## Features beyond the basic stopwatch
 
