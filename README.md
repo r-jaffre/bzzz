@@ -77,7 +77,13 @@ Signed `.prg` files built with Connect IQ SDK 9.3.0 are committed under [`dist/`
 
 If the watch ever shows **"Manifest file is not in the correct format"** when starting a sideloaded app: the loader keeps stale metadata keyed to the app UUID. Fix = remove the app on the watch (app list → hold → Remove App), restart the watch, then sideload a build whose manifest has a **fresh app UUID** and a fresh `.prg` filename. (This repo now uses a fresh UUID after hitting exactly that error.)
 
-Sideload: connect the watch over USB (it appears as a mass-storage drive) and copy the matching `dist/Bzzz_fr255.prg` into `GARMIN/APPS/` on the watch. The app then appears in the watch's app list. (Built with SDK 9.3.0, signed with a locally generated developer key, so this works for sideloading; store submission would use a Garmin-issued key.)
+Sideload: connect the watch over USB and copy the matching `dist/Bzzz_fr255.prg` into `GARMIN/APPS/` on the watch. The app then appears in the watch's app list. (Built with SDK 9.3.0, signed with a locally generated developer key, so this works for sideloading; store submission would use a Garmin-issued key.)
+
+**The FR255 is an MTP device** (Media Transfer Protocol, no mass-storage drive):
+
+- **Windows**: browse the watch in File Explorer (This PC → Garmin) and copy the file — works out of the box.
+- **macOS**: Finder does not support MTP at all. Install [OpenMTP](https://openmtp.ganeshrvel.com/) (`brew install --cask openmtp`), plug the watch directly into a USB-C port (not through a display/AV adapter), and copy via OpenMTP.
+- If the watch shows *"Manifest file is not in the correct format"* when launching a sideloaded app: remove the app on the watch (app list → hold → Remove), restart the watch, then sideload again.
 
 ## Building from source
 
