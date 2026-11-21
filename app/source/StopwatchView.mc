@@ -293,6 +293,7 @@ class StopwatchView extends WatchUi.View {
         var bigHotTxt = "";   // drawn with FONT_NUMBER_HOT
         var bigCountValue = -1; // >= 0 -> drawn as huge Roboto Black digits
         var medTxt = "";
+        var medFont = Graphics.FONT_NUMBER_MEDIUM; // digits only
         var noDot = false;      // rest screen: count only, no status dot
         if (Settings.getViewMode() == Settings.VIEW_CHRONO) {
             // Classic view: phase chrono big, tick count below.
@@ -308,13 +309,15 @@ class StopwatchView extends WatchUi.View {
         } else {
             // Intervals view ready: the swim chrono at 0:00, ready to go,
             // with a small reminder of the rest interval below.
+            // A TEXT font is required here: stock number fonts have no letters.
             bigHotTxt = chronoTxt;
             medTxt = Lang.format(WatchUi.loadResource(Rez.Strings.HintInterval), [Settings.getIntervalSec()]);
+            medFont = Graphics.FONT_MEDIUM;
         }
 
         var timeY = h * 47 / 100;
         var th = dc.getFontHeight(Graphics.FONT_NUMBER_HOT);
-        var mh = dc.getFontHeight(Graphics.FONT_NUMBER_MEDIUM);
+        var mh = dc.getFontHeight(medFont);
         var dotR = h * 45 / 1000;
         var gap = h * 4 / 100;
         // Vertical extent of the big element (custom digits or hot font).
@@ -366,7 +369,7 @@ class StopwatchView extends WatchUi.View {
             dc.drawText(w / 2, bigY, Graphics.FONT_NUMBER_HOT, bigHotTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
         if (medTxt != "") {
-            dc.drawText(w / 2, medY, Graphics.FONT_NUMBER_MEDIUM, medTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(w / 2, medY, medFont, medTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
 
         try {
