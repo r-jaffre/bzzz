@@ -137,7 +137,7 @@ class StopwatchView extends WatchUi.View {
         if (!bigFontsTried) {
             bigFontsTried = true;
             bigFonts = [
-                WatchUi.loadResource(Rez.Fonts.BigCount215),
+                WatchUi.loadResource(Rez.Fonts.BigCount260),
                 WatchUi.loadResource(Rez.Fonts.BigCount180),
                 WatchUi.loadResource(Rez.Fonts.BigCount125)
             ];
@@ -163,7 +163,7 @@ class StopwatchView extends WatchUi.View {
     // Text height of the big count on this screen (for layout).
     function bigDigitsHeight(dc as Graphics.Dc, w as Lang.Number, h as Lang.Number, value as Lang.Number) as Lang.Number {
         var txt = Lang.format("$1$", [value]);
-        var f = pickBigFont(dc, txt, w * 82 / 100, h * 63 / 100);
+        var f = pickBigFont(dc, txt, w * 82 / 100, h * 74 / 100);
         var dim = dc.getTextDimensions(txt, f);
         return dim[1];
     }
@@ -171,7 +171,7 @@ class StopwatchView extends WatchUi.View {
     // Draw value as huge Roboto Black digits centered on cy.
     function drawBigCount(dc as Graphics.Dc, w as Lang.Number, cy as Lang.Number, value as Lang.Number, h as Lang.Number) as Void {
         var txt = Lang.format("$1$", [value]);
-        var f = pickBigFont(dc, txt, w * 82 / 100, h * 63 / 100);
+        var f = pickBigFont(dc, txt, w * 82 / 100, h * 74 / 100);
         dc.drawText(w / 2, cy, f, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
@@ -204,9 +204,8 @@ class StopwatchView extends WatchUi.View {
             bigHotTxt = chronoTxt;
             medTxt = Lang.format("$1$", [ticks]);
         } else if (isRest) {
-            // Intervals view: rest interval count big, rest chrono below.
+            // Intervals view: just the rest interval count, as big as it gets.
             bigCountValue = ticks;
-            medTxt = chronoTxt;
         } else if (isSwim) {
             // Intervals view while swimming: swim chrono big.
             bigHotTxt = chronoTxt;
@@ -222,8 +221,22 @@ class StopwatchView extends WatchUi.View {
         var gap = h * 4 / 100;
         // Vertical extent of the big element (custom digits or hot font).
         var bigH = bigCountValue >= 0 ? bigDigitsHeight(dc, w, h, bigCountValue) : th;
-        var dotY = timeY - bigH / 2 - gap - dotR;
-        var ticksY = timeY + bigH / 2 + gap + mh / 2;
+
+        // Layout: with a medium row -> classic two-row layout around 47%.
+        // Without -> center a stacked block (status dot above, big number below).
+        var dotY = 0;
+        var bigY = 0;
+        var medY = -1;
+        if (medTxt != "") {
+            bigY = timeY;
+            dotY = bigY - bigH / 2 - gap - dotR;
+            medY = bigY + bigH / 2 + gap + mh / 2;
+        } else {
+            var blockH = dotR * 2 + gap + bigH;
+            var blockTop = (h - blockH) / 2 - h * 2 / 100;
+            dotY = blockTop + dotR;
+            bigY = blockTop + dotR * 2 + gap + bigH / 2;
+        }
 
         // Status dot: ring = ready, filled = swimming, half disc = resting.
         if (isSwim) {
@@ -246,12 +259,12 @@ class StopwatchView extends WatchUi.View {
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         if (bigCountValue >= 0) {
-            drawBigCount(dc, w, timeY, bigCountValue, h);
+            drawBigCount(dc, w, bigY, bigCountValue, h);
         } else {
-            dc.drawText(w / 2, timeY, Graphics.FONT_NUMBER_HOT, bigHotTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(w / 2, bigY, Graphics.FONT_NUMBER_HOT, bigHotTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
         if (medTxt != "") {
-            dc.drawText(w / 2, ticksY, Graphics.FONT_NUMBER_MEDIUM, medTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(w / 2, medY, Graphics.FONT_NUMBER_MEDIUM, medTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
 
         try {
