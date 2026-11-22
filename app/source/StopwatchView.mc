@@ -1,19 +1,35 @@
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Math;
+import Toybox.Sensor;
 import Toybox.System;
 import Toybox.Timer;
 import Toybox.WatchUi;
 
+// Swim/rest interval trainer:
+//   START (idle)  -> swim phase: chrono times the current swim from 0, silent.
+//   START (swim)  -> rest phase: rest time from 0, buzz now, then one buzz per
+//                   interval; the big number counts completed rest intervals.
+//   START (rest)  -> back to a fresh swim phase; rest count and chrono reset.
+//   DOWN          -> reset everything to idle.
 class StopwatchView extends WatchUi.View {
-    var running = false;
-    var paused = false;
-    var startMs = 0;
-    var elapsedMs = 0;
+    static const PHASE_READY = 0;
+    static const PHASE_SWIM = 1;
+    static const PHASE_REST = 2;
+
+    var phase = 0;
+    var phaseStartMs = 0;
     var ticks = 0;
+    var intervalMs = 15000;
     var uiTimer as Timer.Timer or Null = null;
-    var intervalMs = 0;
     var lastSec = -1;
+    var detector as AutoDetector or Null = null;
+    var sensorOn = false;
+    var sensorFailed = false;
+
+    // Build marker drawn on the ready screen, so the installed build can be
+    // verified on the actual watch (MTP sideloading gives no feedback).
+    static const BUILD_TAG = "v1.5";
 
     function initialize() {
         View.initialize();
@@ -29,41 +45,203 @@ class StopwatchView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
-    function startPause() as Void {
-        var now = System.getTimer();
-        if (running) {
-            elapsedMs += now - startMs;
-            running = false;
-            paused = true;
-            stopAllTimers();
-            Alert.confirm();
-            lastSec = -1;
+    // START button: advance the phase cycle (always works, even in auto mode).
+    function advancePhase() as Void {
+        if (phase == StopwatchView.PHASE_SWIM) {
+            enterRest(false);
         } else {
-            running = true;
-            paused = false;
-            startMs = now;
-            intervalMs = Settings.getIntervalSec() * 1000;
-            startUiTimer();
-            Alert.confirm();
-            lastSec = -1;
+            enterSwim();
         }
+    }
+
+    // Shared by button presses and auto detection: at the wall = rest begins.
+    // For auto detection, backdate the rest clock to when movement ACTUALLY
+    // stopped, so the interval grid is aligned with the true rest start
+    // (the first interval buzz lands a full interval after the swimmer
+    // stopped, not a full interval after detection).
+    function enterRest(backdate as Lang.Boolean) as Void {
+        var now = System.getTimer();
+        phase = StopwatchView.PHASE_REST;
+        if (backdate && detector != null) {
+            // Clamp the backdate to the stillness delay: stillMs keeps
+            // growing during the previous phase, so raw stillMs can be
+            // larger than the confirmation window.
+            var bd = detector.stillMs;
+            var maxBd = Settings.getStillSec() * 1000;
+            if (bd > maxBd) {
+                bd = maxBd;
+            }
+            phaseStartMs = now - bd;
+        } else {
+            phaseStartMs = now;
+        }
+        // A new phase starts from zero motion credit: leftover credit
+        // from the previous phase otherwise re-triggers transitions
+        // immediately (swim -> rest loop).
+        if (detector != null) {
+            detector.stillMs = 0;
+            detector.moveMs = 0;
+        }
+        ticks = 0;
+        // Lock the interval for the whole rest phase so the buzz grid
+        // never shifts mid-rest (settings changes apply next phase).
+        intervalMs = Settings.getIntervalSec() * 1000;
+        if (intervalMs <= 0) {
+            intervalMs = Settings.DEFAULT_INTERVAL_SEC * 1000;
+        }
+        // Backdated rest may have already crossed whole intervals while
+        // stillness was being confirmed (short interval + long delay):
+        // adopt that count silently; the next grid slot buzzes as usual.
+        var elapsed = getElapsedMs();
+        var startCount = elapsed / intervalMs;
+        if (startCount > ticks) {
+            ticks = startCount;
+        }
+        startUiTimer();
+        // Distinct triple pulse: "rest is counting now".
+        Alert.restStart();
+        lastSec = -1;
         WatchUi.requestUpdate();
+    }
+
+    // Shared by button presses and auto detection: back to a fresh swim.
+    function enterSwim() as Void {
+        var now = System.getTimer();
+        phase = StopwatchView.PHASE_SWIM;
+        phaseStartMs = now;
+        // Fresh phase, fresh motion credit (see enterRest).
+        if (detector != null) {
+            detector.stillMs = 0;
+            detector.moveMs = 0;
+        }
+        ticks = 0;
+        startUiTimer();
+        if (Settings.getAutoMode() == Settings.AUTO_ON) {
+            startSensor();
+        }
+        // Two medium pulses: new swim phase, rest count wiped.
+        Alert.swimStart();
+        lastSec = -1;
+        WatchUi.requestUpdate();
+    }
+
+    // --- Automatic rest detection (accelerometer) ---
+
+    function startSensor() as Void {
+        if (sensorOn || sensorFailed) {
+            return;
+        }
+        try {
+            if (Sensor has :registerSensorDataListener) {
+                if (detector == null) {
+                    detector = new AutoDetector(10, Settings.getMotionThreshold());
+                }
+                detector.reset();
+                // Clamp the requested sample rate to what the hardware
+                // supports. Guarded separately: this call itself must
+                // never be able to take the session down.
+                var rate = 10;
+                try {
+                    if ((Sensor has :getMaxSampleRateForSensorType)) {
+                        var maxRate = Sensor.getMaxSampleRateForSensorType(:accelerometer);
+                        if (maxRate instanceof Lang.Number && maxRate > 0 && maxRate < rate) {
+                            rate = maxRate;
+                        }
+                    }
+                } catch (eRate) {
+                }
+                Sensor.registerSensorDataListener(method(:onSensorData), {
+                    :period => 1,
+                    :accelerometer => {
+                        :enabled => true,
+                        :sampleRate => rate
+                    }
+                });
+                sensorOn = true;
+            }
+        } catch (e) {
+            // Nothing in the sensing setup may ever kill the session:
+            // disable auto detection and keep going button-driven.
+            onSensorFail();
+        }
+    }
+
+    // Single place for "auto mode is unavailable, running manual instead".
+    // Buzzes once so the user knows auto is off, and shows a marker on screen.
+    function onSensorFail() as Void {
+        if (!sensorFailed) {
+            sensorFailed = true;
+            stopSensor();
+            Alert.autoDisabled();
+            WatchUi.requestUpdate();
+        }
+    }
+
+    function stopSensor() as Void {
+        if (sensorOn && (Sensor has :unregisterSensorDataListener)) {
+            try {
+                Sensor.unregisterSensorDataListener();
+            } catch (e) {
+            }
+        }
+        sensorOn = false;
+    }
+
+    // Sensor data callback. Runs in a context we cannot debug on hardware,
+    // so any failure here must degrade gracefully to manual mode instead of
+    // killing the session (an uncaught exception = CIQ failure screen).
+    function onSensorData(sensorData as Sensor.SensorData) as Void {
+        try {
+            if (detector == null) {
+                return;
+            }
+            if (sensorData has :accelerometerData) {
+                var d = sensorData.accelerometerData;
+                // The axis arrays are individually nullable per the docs.
+                if (d != null && d.x != null && d.y != null && d.z != null) {
+                    detector.ingest(d.x, d.y, d.z);
+                    evaluateAutoTransitions();
+                }
+            }
+        } catch (e) {
+            // Never let a sensor issue abort the workout: stop sensing and
+            // keep running with button-driven (manual) behavior.
+            onSensorFail();
+        }
+    }
+
+    // Auto phase transitions: still too long while swimming -> rest;
+    // moving again while resting -> new swim. Buttons override anytime.
+    function evaluateAutoTransitions() as Void {
+        if (detector == null || Settings.getAutoMode() != Settings.AUTO_ON) {
+            return;
+        }
+        if (phase == StopwatchView.PHASE_SWIM) {
+            if (detector.stillMs >= Settings.getStillSec() * 1000) {
+                enterRest(true);
+            }
+        } else if (phase == StopwatchView.PHASE_REST) {
+            if (detector.moveMs >= AutoDetector.MOVE_ONSET_MS) {
+                enterSwim();
+            }
+        }
     }
 
     function reset() as Void {
         stopAllTimers();
+        stopSensor();
+        sensorFailed = false;
         Alert.resetBuzz();
         lastSec = -1;
-        running = false;
-        paused = false;
-        elapsedMs = 0;
+        phase = StopwatchView.PHASE_READY;
+        phaseStartMs = 0;
         ticks = 0;
-        startMs = 0;
-        intervalMs = 0;
+        intervalMs = Settings.DEFAULT_INTERVAL_SEC * 1000;
         WatchUi.requestUpdate();
     }
 
     function stopAllTimers() as Void {
+        stopSensor();
         if (uiTimer != null) {
             uiTimer.stop();
         }
@@ -78,33 +256,33 @@ class StopwatchView extends WatchUi.View {
     }
 
     function onUiTick() as Void {
+        // Keep motion sensing in sync with settings (menu can change mid-session).
+        if (Settings.getAutoMode() == Settings.AUTO_ON && sensorOn == false && sensorFailed == false && phase != StopwatchView.PHASE_READY) {
+            startSensor();
+        }
+        if (detector != null) {
+            detector.thresholdMG = Settings.getMotionThreshold();
+        }
         var elapsed = getElapsedMs();
-        var iv = Settings.getIntervalSec() * 1000;
-        if (iv > 0) {
-            intervalMs = iv;
-        }
-        if (intervalMs <= 0) {
-            intervalMs = 15000;
-        }
-        var tickIndex = elapsed / intervalMs;
-        if (tickIndex > ticks) {
-            ticks = tickIndex;
-            Alert.tick(Settings.getAlertMode(), Settings.getVibePower());
+        if (phase == StopwatchView.PHASE_REST) {
+            var tickIndex = elapsed / intervalMs;
+            if (tickIndex > ticks) {
+                ticks = tickIndex;
+                Alert.tick(Settings.getAlertMode(), Settings.getVibePower());
+            }
         }
         var sec = elapsed / 1000;
         if (sec != lastSec) {
             lastSec = sec;
-            if (running && sec % 5 == 0) {
-            }
             WatchUi.requestUpdate();
         }
     }
 
     function getElapsedMs() as Lang.Number {
-        if (running) {
-            return elapsedMs + (System.getTimer() - startMs);
+        if (phase == StopwatchView.PHASE_READY) {
+            return 0;
         }
-        return elapsedMs;
+        return System.getTimer() - phaseStartMs;
     }
 
     function formatTime(ms as Lang.Number) as Lang.String {
@@ -121,6 +299,53 @@ class StopwatchView extends WatchUi.View {
         return Lang.format("$1$", [n]);
     }
 
+    // Huge count rendering: Roboto Black rasterized at three sizes
+    // (resources/fonts/fonts.xml); pick the largest that fits the screen.
+    var bigFonts as Lang.Array<Graphics.FontType> = [];
+    var bigFontsTried = false;
+
+    function loadBigFonts() as Void {
+        if (!bigFontsTried) {
+            bigFontsTried = true;
+            bigFonts = [
+                WatchUi.loadResource(Rez.Fonts.BigCount290),
+                WatchUi.loadResource(Rez.Fonts.BigCount185),
+                WatchUi.loadResource(Rez.Fonts.BigCount125)
+            ];
+        }
+    }
+
+    // Pick the biggest bundled font whose rendering of txt fits in
+    // (maxW x maxH). Falls back to the smallest bundled font.
+    function pickBigFont(dc as Graphics.Dc, txt as Lang.String, maxW as Lang.Number, maxH as Lang.Number) as Graphics.FontType {
+        loadBigFonts();
+        var best = bigFonts[bigFonts.size() - 1];
+        for (var i = 0; i < bigFonts.size(); i++) {
+            var f = bigFonts[i];
+            var dim = dc.getTextDimensions(txt, f);
+            if (dim[0] <= maxW && dim[1] <= maxH) {
+                return f;
+            }
+            best = f;
+        }
+        return best;
+    }
+
+    // Text height of the big count on this screen (for layout).
+    function bigDigitsHeight(dc as Graphics.Dc, w as Lang.Number, h as Lang.Number, value as Lang.Number) as Lang.Number {
+        var txt = Lang.format("$1$", [value]);
+        var f = pickBigFont(dc, txt, w * 86 / 100, h * 88 / 100);
+        var dim = dc.getTextDimensions(txt, f);
+        return dim[1];
+    }
+
+    // Draw value as huge Roboto Black digits centered on cy.
+    function drawBigCount(dc as Graphics.Dc, w as Lang.Number, cy as Lang.Number, value as Lang.Number, h as Lang.Number) as Void {
+        var txt = Lang.format("$1$", [value]);
+        var f = pickBigFont(dc, txt, w * 86 / 100, h * 88 / 100);
+        dc.drawText(w / 2, cy, f, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+    }
+
     function onUpdate(dc as Graphics.Dc) as Void {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
@@ -130,23 +355,76 @@ class StopwatchView extends WatchUi.View {
             dc.drawBitmap(0, 0, arcsBmp);
         }
 
+        var isSwim = phase == StopwatchView.PHASE_SWIM;
+        var isRest = phase == StopwatchView.PHASE_REST;
+
         var statusColor = Graphics.COLOR_WHITE;
-        if (running) {
+        if (isSwim) {
             statusColor = Graphics.COLOR_GREEN;
-        } else if (paused) {
+        } else if (isRest) {
             statusColor = Graphics.COLOR_YELLOW;
         }
+
+        // Choose the big / medium figures for the current view.
+        var chronoTxt = formatTime(getElapsedMs());
+        var bigHotTxt = "";   // drawn with FONT_NUMBER_HOT
+        var bigCountValue = -1; // >= 0 -> drawn as huge Roboto Black digits
+        var medTxt = "";
+        var medFont = Graphics.FONT_NUMBER_MEDIUM; // digits only
+        var noDot = false;      // rest screen: count only, no status dot
+        if (Settings.getViewMode() == Settings.VIEW_CHRONO) {
+            // Classic view: phase chrono big, tick count below.
+            bigHotTxt = chronoTxt;
+            medTxt = Lang.format("$1$", [ticks]);
+        } else if (isRest) {
+            // Intervals view resting: ONLY the rest interval count fills the screen.
+            bigCountValue = ticks;
+            noDot = true;
+        } else if (isSwim) {
+            // Intervals view while swimming: swim chrono big.
+            bigHotTxt = chronoTxt;
+        } else {
+            // Intervals view ready: the swim chrono at 0:00, ready to go,
+            // with a small reminder of the rest interval below.
+            // A TEXT font is required here: stock number fonts have no letters.
+            bigHotTxt = chronoTxt;
+            medTxt = Lang.format(WatchUi.loadResource(Rez.Strings.HintInterval), [Settings.getIntervalSec()]);
+            medFont = Graphics.FONT_MEDIUM;
+        }
+
         var timeY = h * 47 / 100;
         var th = dc.getFontHeight(Graphics.FONT_NUMBER_HOT);
-        var mh = dc.getFontHeight(Graphics.FONT_NUMBER_MEDIUM);
+        var mh = dc.getFontHeight(medFont);
         var dotR = h * 45 / 1000;
         var gap = h * 4 / 100;
-        var dotY = timeY - th / 2 - gap - dotR;
-        var ticksY = timeY + th / 2 + gap + mh / 2;
-        if (running) {
+        // Vertical extent of the big element (custom digits or hot font).
+        var bigH = bigCountValue >= 0 ? bigDigitsHeight(dc, w, h, bigCountValue) : th;
+
+        // Layout: with a medium row -> classic two-row layout around 47%.
+        // Without -> centered stack; while resting ONLY the big number shows.
+        var dotY = 0;
+        var bigY = 0;
+        var medY = -1;
+        if (medTxt != "") {
+            bigY = timeY;
+            dotY = bigY - bigH / 2 - gap - dotR;
+            medY = bigY + bigH / 2 + gap + mh / 2;
+        } else if (noDot) {
+            bigY = h / 2 - h * 2 / 100;
+        } else {
+            var blockH = dotR * 2 + gap + bigH;
+            var blockTop = (h - blockH) / 2 - h * 2 / 100;
+            dotY = blockTop + dotR;
+            bigY = blockTop + dotR * 2 + gap + bigH / 2;
+        }
+
+        // Status dot: ring = ready, filled = swimming, half disc = resting.
+        if (noDot) {
+            // Resting: count only, nothing else on screen.
+        } else if (isSwim) {
             dc.setColor(statusColor, Graphics.COLOR_BLACK);
             dc.fillCircle(w / 2, dotY, dotR);
-        } else if (paused) {
+        } else if (isRest) {
             dc.setColor(statusColor, Graphics.COLOR_BLACK);
             var pts = [];
             var n = 16;
@@ -162,10 +440,27 @@ class StopwatchView extends WatchUi.View {
         }
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        var txt = formatTime(getElapsedMs());
-        dc.drawText(w / 2, timeY, Graphics.FONT_NUMBER_HOT, txt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        if (bigCountValue >= 0) {
+            drawBigCount(dc, w, bigY, bigCountValue, h);
+        } else {
+            dc.drawText(w / 2, bigY, Graphics.FONT_NUMBER_HOT, bigHotTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
+        if (medTxt != "") {
+            dc.drawText(w / 2, medY, medFont, medTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
 
-        dc.drawText(w / 2, ticksY, Graphics.FONT_NUMBER_MEDIUM, Lang.format("$1$", [ticks]), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        // Build tag on the ready screen: confirms which build is on the
+        // watch (tiny gray text, diagnostic only).
+        if (phase == StopwatchView.PHASE_READY) {
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
+            dc.drawText(w / 2, h * 95 / 100, Graphics.FONT_TINY, StopwatchView.BUILD_TAG, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
+        // Auto mode was requested but the sensor failed: say so, or the
+        // silent manual fallback is indistinguishable from a broken feature.
+        if (sensorFailed && Settings.getAutoMode() == Settings.AUTO_ON && phase != StopwatchView.PHASE_READY) {
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
+            dc.drawText(w / 2, h * 5 / 100, Graphics.FONT_TINY, "auto off", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
 
         try {
             drawButtonHints(dc, w, h);
@@ -190,10 +485,12 @@ class StopwatchView extends WatchUi.View {
         var p = hintPoint(cx, cy, d, -30);
         var x = p[0];
         var y = p[1];
-        if (running) {
+        if (phase == StopwatchView.PHASE_SWIM) {
+            // Two bars: press to interrupt the swim and start resting.
             dc.fillRectangle(x - gs / 2, y - gs / 2, gs / 3, gs);
             dc.fillRectangle(x + gs / 6, y - gs / 2, gs / 3, gs);
         } else {
+            // Triangle: press to swim.
             dc.fillPolygon([[x - gs / 2, y - gs / 2], [x + gs / 2, y], [x - gs / 2, y + gs / 2]] as Lang.Array<Graphics.Point2D>);
         }
 

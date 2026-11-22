@@ -1,6 +1,10 @@
 import Toybox.Attention;
 import Toybox.Lang;
 
+// Buzz vocabulary (single pulses = interval ticks, never changed):
+//   restStart: 3 quick pulses  - "rest is counting now"
+//   swimStart: 2 medium pulses - "back to swimming, slate wiped"
+//   reset:     1 long pulse    - "everything cleared"
 class Alert {
     static function tick(mode as Lang.Number, power as Lang.Number) as Void {
         if (mode == Settings.ALERT_SOUND || mode == Settings.ALERT_BOTH) {
@@ -22,6 +26,30 @@ class Alert {
         }
     }
 
+    // Three quick pulses: rest started (auto-detected or manual).
+    static function restStart() as Void {
+        if (Attention has :vibrate) {
+            Attention.vibrate([
+                new Attention.VibeProfile(100, 60),
+                new Attention.VibeProfile(0, 70),
+                new Attention.VibeProfile(100, 60),
+                new Attention.VibeProfile(0, 70),
+                new Attention.VibeProfile(100, 60)
+            ]);
+        }
+    }
+
+    // Two medium pulses: a new swim phase (count reset).
+    static function swimStart() as Void {
+        if (Attention has :vibrate) {
+            Attention.vibrate([
+                new Attention.VibeProfile(100, 110),
+                new Attention.VibeProfile(0, 140),
+                new Attention.VibeProfile(100, 110)
+            ]);
+        }
+    }
+
     static function confirm() as Void {
         if (Attention has :vibrate) {
             Attention.vibrate([
@@ -35,6 +63,18 @@ class Alert {
     static function resetBuzz() as Void {
         if (Attention has :vibrate) {
             Attention.vibrate([new Attention.VibeProfile(100, 250)]);
+        }
+    }
+
+    // Two long pulses: auto motion detection is unavailable on this device,
+    // the session continues in manual (button) mode.
+    static function autoDisabled() as Void {
+        if (Attention has :vibrate) {
+            Attention.vibrate([
+                new Attention.VibeProfile(100, 350),
+                new Attention.VibeProfile(0, 150),
+                new Attention.VibeProfile(100, 350)
+            ]);
         }
     }
 }

@@ -1,6 +1,17 @@
 # Bzzz
 
-A Garmin Connect IQ stopwatch app for the **Forerunner 255** (fr255 / fr255s / fr255m / fr255sm) that gives a short vibration tick at a regular interval — built for visually impaired swimmers who want to count rest time against the pool clock without looking at the watch.
+A Garmin Connect IQ app for the **Forerunner 255** (fr255 / fr255s / fr255m / fr255sm) that counts rest intervals by vibration — built for visually impaired swimmers and freedivers who want to count rest time without looking at the watch.
+
+Press **START** once, then the watch runs the session by itself (see [How it works](#how-it-works)). At any time **START** overrides the machine, **UP** (middle-left) opens settings, **DOWN** (bottom-left) resets the session, and **BACK** exits.
+
+The screen is high-contrast (white on black) with a status dot (white ring = ready, green dot = swimming) and the rest count in huge bundled Roboto Black digits (LOW vision friendly: a single-digit count fills ~82% of the FR255 face).
+
+**Views** (settings → `Default view`):
+
+- **Intervals** (default): ready shows the swim chrono at 0:00 with a `rest: 15 s` hint; swimming shows the status dot above the swim chrono; **resting shows ONLY the interval count** — huge Roboto Black digits (single digit ~82% of a FR255 face, two digits ~52%, three ~35%). The font ships at three raster sizes (via `tools/genfont.py`) and the app picks the largest that fits.
+- **Chronometer**: the classic layout — the current phase's chrono big, with the tick count below.
+
+The rest interval is locked at the moment the rest phase starts, so the buzz grid never shifts mid-rest; changing the interval in settings applies from the next rest phase.
 
 ## Languages
 
@@ -8,21 +19,44 @@ English (default) and French (`fre`). French strings live in `resources-fre/stri
 
 ## How it works
 
-- Press **START** (or tap the screen) to start the stopwatch.
-- Every **N seconds** (default **15 s**, matching the pool pace clock) the watch gives a short buzz and the on-screen tick counter increases, so each buzz = one pool-clock interval of rest.
-- Press **START** again to pause, once more to resume. Pausing keeps the buzz cadence aligned with the chronometer: the next buzz still lands on the same 15 s grid, not a full interval after resuming.
-- Press **UP** (middle-left button on the FR255) to open settings.
-- Press **DOWN** (bottom-left button on the FR255) to reset the stopwatch to zero.
-- **BACK** (bottom-right button on the FR255) exits the app via the default back behavior; the top-left LIGHT button does nothing in the app.
+Bzzz is a **hands-free swim/rest interval trainer** for freedivers: press START once, and from then on the watch senses movement and runs the whole cycle by itself.
 
-The screen is high-contrast (white on black) with large digits: status, elapsed `MM:SS`, tick count, and the current interval/alert mode.
+- **Auto mode** (default, "Mode: Auto (motion)"): the FR255's accelerometer classifies you as **swimming** while you're moving and **resting** once you've been still for the *rest delay* (default 10 s — long enough that a streamlined glide underwater never counts as rest, but a stop at the wall does).
+  - Rest begins **automatically** after the stillness delay: a triple buzz, then the giant rest-interval count ticks at your interval. **The rest clock is backdated to when you actually stopped moving**, so the first interval buzz lands exactly one interval (15 s by default) after you stopped - the count matches the pool clock, not the detection delay.
+  - You kick off for the next dive: after ~3 s of motion the watch is back to **swimming** — count and chrono reset, double buzz, no button touched underwater.
+  - At any moment **START overrides the machine** (press to force a phase change) and **DOWN resets the session**.
+- **Manual mode** ("Mode: Manual (button)"): the same cycle, driven entirely by START presses (the classic behavior).
+
+Buzz vocabulary:
+
+- **Rest starts** — 3 quick pulses
+- **Interval tick** — a single short pulse at every interval of rest (15 s default; the cadence is the product)
+- **Back to swimming** — 2 medium pulses (slate wiped)
+- **Reset** — 1 long pulse
+
+Screens (settings → `Default view`):
+
+- **Intervals** (default): **ready** shows the swim chrono frozen at 0:00 with a small `rest: 15 s` hint; **swimming** shows the status dot above the swim chrono; **resting shows ONLY the rest-interval count** in huge bundled Roboto Black digits (a single digit fills ~82% of a FR255 face).
+- **Chronometer**: the classic two-row layout (chrono big, tick count below).
+
+Tuning (in-app menu or Garmin Connect settings):
+
+- **Tick interval** (5–120 s, default 15 s) — the rest buzz cadence.
+- **Alert** (vibrate / sound / both) and **vibe power** (1–5).
+- **Automation**: Auto (motion) or Manual (button).
+- **Motion sensitivity** (high / medium / low): threshold for what counts as "moving", in case you scull gently while resting or want only strong kicks to count.
+- **Rest delay** (5 / 10 / 15 s): how long you must be still at the wall before rest is declared.
+
+The rest interval is locked at rest start, so the buzz grid never shifts mid-rest; settings changes apply from the next phase.
 
 ## Settings
 
 Configurable both in the app (DOWN button) and in Garmin Connect / Garmin Express (app settings):
 
-- **Tick interval**: 5, 10, 15 (default), 20, 30, 45, 60, 90 or 120 seconds.
+- **Tick interval**: 5, 10, 15 (default), 20, 30, 45, 60, 90 or 120 seconds — the rest buzz cadence.
 - **Alert on each tick**: Vibrate (default), Sound, or Vibrate + sound.
+- **Vibration power**: 1–5.
+- **Default view**: Intervals (default — big rest-interval count) or Chronometer (classic chrono + tick count).
 
 Notes on alerts:
 
@@ -31,48 +65,58 @@ Notes on alerts:
 
 ## Prebuilt packages
 
-Signed `.prg` files built with Connect IQ SDK 9.2.0 are committed under [`dist/`](dist/):
+Signed `.prg` files built with Connect IQ SDK 9.3.0 are committed under [`dist/`](dist/):
 
 - `dist/Bzzz_fr255.prg` — Forerunner 255
 - `dist/Bzzz_fr255s.prg` — Forerunner 255s
 - `dist/Bzzz_fr255m.prg` — Forerunner 255 Music
 - `dist/Bzzz_fr255sm.prg` — Forerunner 255s Music
-- `dist/Bzzz_fr255_sim.prg` — simulator build (`fr255_sim`, for use with `monkeydo`)
+- `dist/Bzzz_fr255_sim.prg` — simulator build (fr255 device, for use with `monkeydo`)
 
 ## Installing on the watch
 
 If the watch ever shows **"Manifest file is not in the correct format"** when starting a sideloaded app: the loader keeps stale metadata keyed to the app UUID. Fix = remove the app on the watch (app list → hold → Remove App), restart the watch, then sideload a build whose manifest has a **fresh app UUID** and a fresh `.prg` filename. (This repo now uses a fresh UUID after hitting exactly that error.)
 
-Sideload: connect the watch over USB (it appears as a mass-storage drive) and copy the matching `dist/Bzzz_fr255.prg` into `GARMIN/APPS/` on the watch. The app then appears in the watch's app list. (Built with SDK 9.2.0, signed with a locally generated developer key, so this works for sideloading; store submission would use a Garmin-issued key.)
+Sideload: connect the watch over USB and copy the matching `dist/Bzzz_fr255.prg` into `GARMIN/APPS/` on the watch. The app then appears in the watch's app list. (Built with SDK 9.3.0, signed with a locally generated developer key, so this works for sideloading; store submission would use a Garmin-issued key.)
+
+**The FR255 is an MTP device** (Media Transfer Protocol, no mass-storage drive):
+
+- **Windows**: browse the watch in File Explorer (This PC → Garmin) and copy the file — works out of the box.
+- **macOS**: Finder does not support MTP at all. Install [OpenMTP](https://openmtp.ganeshrvel.com/) (`brew install --cask openmtp`), plug the watch directly into a USB-C port (not through a display/AV adapter), and copy via OpenMTP.
+- If the watch shows *"Manifest file is not in the correct format"* when launching a sideloaded app: remove the app on the watch (app list → hold → Remove), restart the watch, then sideload again.
 
 ## Building from source
 
 The repo has two projects: `app/` (the watch app with glance) and `datafield/` (the in-activity data field). Build each from its own folder (the compiler scans the whole project dir for `.mc` files, so don't build from the repo root).
 
-1. Install the [Connect IQ SDK Manager](https://developer.garmin.com/connect-iq/connect-iq-basics/getting-started/), download SDK 9.2.x and the `fr255` device pack.
-2. Generate a developer key (VS Code "Monkey C: Generate Developer Key", or `openssl genrsa -out developer_key.pem 4096 && openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem -out developer_key.der -nocrypt`), keep it in the repo root (git-ignored, never commit it).
-3. Build signed packages:
+1. Install the [Connect IQ SDK Manager](https://developer.garmin.com/connect-iq/connect-iq-basics/getting-started/) — on macOS `brew install --cask connectiq-sdk-manager` works — log in with a Garmin account, download an SDK (this machine has **9.3.0**) and the `fr255` device packs (fr255 / fr255s / fr255m / fr255sm). The manager keeps everything under `~/Library/Application Support/Garmin/ConnectIQ/` (`Sdks/` + `Devices/`). `monkeyc` resolves devices from that `Devices/` folder automatically.
+2. Install Java 17 (`brew install openjdk@17`) — `monkeyc` needs `java` on its PATH.
+3. Generate a developer key (VS Code "Monkey C: Generate Developer Key", or `openssl genrsa -out developer_key.pem 4096 && openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem -out developer_key.der -nocrypt`), keep it in the repo root (git-ignored, never commit it).
+4. Build signed packages (put the SDK's `bin` and Java on your PATH first):
 
    ```
+   export CIQ="$HOME/Library/Application Support/Garmin/ConnectIQ"
+   export PATH="$CIQ/Sdks/connectiq-sdk-mac-9.3.0-2026-10-20-95888f262/bin:$(/usr/libexec/java_home -v 17)/bin:$PATH"
+
    cd app && monkeyc -d fr255 -o ../bin/Bzzz_fr255.prg -f monkey.jungle -y ../developer_key.der -w
    cd datafield && monkeyc -d fr255 -o ../bin/BzzzDatafield_fr255.prg -f monkey.jungle -y ../developer_key.der -w
    ```
 
-   Replace `-d fr255` with `fr255s` / `fr255m` / `fr255sm` (and `fr255_sim` for the app simulator).
+   Replace `-d fr255` with `fr255s` / `fr255m` / `fr255sm`. (Avoid `-o ../dist/...`: the compiler drops debug byproducts next to the output, and `dist/` holds only signed `.prg` files.)
 
 ### Run in the simulator from VS Code
 
-1. Install the **Monkey C** extension (Garmin) in VS Code, and make sure the SDK Manager has SDK 9.2.0 + the Forerunner 255 device pack installed. Run Command Palette → **Monkey C: Verify Installation** to check the extension sees the SDK and Java.
+1. Install the **Monkey C** extension (Garmin) in VS Code, and make sure the SDK Manager has SDK 9.3.0 + the Forerunner 255 device packs installed. Run Command Palette → **Monkey C: Verify Installation** to check the extension sees the SDK and Java.
 2. Command Palette → **Monkey C: Generate Developer Key** once (stores the key path in settings; needed to sign builds).
 3. Open any `source/*.mc` file, then use the **Run and Debug** sidebar (Ctrl+Shift+D) and press the play button, or **Run → Run Without Debugging (Ctrl+F5)**. Pick `fr255` when prompted — the simulator starts with the app loaded. The repo ships a ready-made `.vscode/launch.json` ("Run App (fr255)" / "Run App (pick device)").
 4. To just build without running: Command Palette → **Monkey C: Build Current Project**.
 
-Alternatively from the command line with the SDK's `bin` on your PATH: `monkeyc -d fr255_sim -o bin/Bzzz_fr255_sim.prg -f monkey.jungle -y developer_key.der`, start the simulator (`bin/connectiq` / `ConnectIQ.app` / `ConnectIQ.exe`), then `monkeydo bin/Bzzz_fr255_sim.prg fr255`.
+Alternatively from the command line with the SDK's `bin` on your PATH: start the simulator (`ConnectIQ.app` in the SDK's `bin/`), then `monkeydo bin/Bzzz_fr255.prg fr255` — a regular fr255 build runs in the simulator.
 
 ## Features beyond the basic stopwatch
 
 - **Data field** (`datafield/`): a Connect IQ data field that runs inside activities (e.g. swim) — it follows the activity timer (start/pause/resume/stop/reset) and buzzes every interval. Add it to a swim activity page; it has its own settings (interval/alert/power). Note: `Settings.mc`/`Alert.mc` are duplicated into `datafield/source/` because the compiler scans each project dir separately.
-- **Haptics**: distinct patterns — interval tick = single pulse (length = power), start/pause = double short pulse, reset = one long pulse.
+- **Haptics**: distinct patterns — rest tick = single pulse (length = power), swim start = double short pulse, reset = one long pulse.
 - **Progress ring**: while running, a thin ring at 93% radius fills over the current interval.
 - **Battery**: UI redraws only when the displayed second changes (tick checks stay at 250 ms so the buzz grid stays exact).
 

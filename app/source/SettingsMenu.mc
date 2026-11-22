@@ -11,6 +11,30 @@ function alertModeRes(mode as Lang.Number) as Lang.ResourceId {
     return Rez.Strings.AlertVibrate;
 }
 
+function viewModeRes(mode as Lang.Number) as Lang.ResourceId {
+    if (mode == Settings.VIEW_CHRONO) {
+        return Rez.Strings.ViewChrono;
+    }
+    return Rez.Strings.ViewIntervals;
+}
+
+function autoModeRes(mode as Lang.Number) as Lang.ResourceId {
+    if (mode == Settings.AUTO_OFF) {
+        return Rez.Strings.ModeManual;
+    }
+    return Rez.Strings.ModeAuto;
+}
+
+function sensitivityRes(s as Lang.Number) as Lang.ResourceId {
+    if (s == Settings.SENS_HIGH) {
+        return Rez.Strings.SensHigh;
+    }
+    if (s == Settings.SENS_LOW) {
+        return Rez.Strings.SensLow;
+    }
+    return Rez.Strings.SensMedium;
+}
+
 function menuItemLabel(id as Lang.Symbol) as Lang.String {
     if (id == :interval) {
         return Lang.format(WatchUi.loadResource(Rez.Strings.MenuInterval), [Settings.getIntervalSec()]);
@@ -18,6 +42,14 @@ function menuItemLabel(id as Lang.Symbol) as Lang.String {
         return Lang.format(WatchUi.loadResource(Rez.Strings.MenuAlert), [WatchUi.loadResource(alertModeRes(Settings.getAlertMode()))]);
     } else if (id == :power) {
         return Lang.format(WatchUi.loadResource(Rez.Strings.MenuPower), [Settings.getVibePower()]);
+    } else if (id == :view) {
+        return Lang.format(WatchUi.loadResource(Rez.Strings.MenuView), [WatchUi.loadResource(viewModeRes(Settings.getViewMode()))]);
+    } else if (id == :mode) {
+        return Lang.format(WatchUi.loadResource(Rez.Strings.MenuMode), [WatchUi.loadResource(autoModeRes(Settings.getAutoMode()))]);
+    } else if (id == :sens) {
+        return Lang.format(WatchUi.loadResource(Rez.Strings.MenuSensitivity), [WatchUi.loadResource(sensitivityRes(Settings.getSensitivity()))]);
+    } else if (id == :still) {
+        return Lang.format(WatchUi.loadResource(Rez.Strings.MenuStillDelay), [Settings.getStillSec()]);
     }
     if (id == :test) {
         return WatchUi.loadResource(Rez.Strings.MenuTest);
@@ -30,6 +62,10 @@ function makeSettingsMenu() as WatchUi.Menu2 {
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:interval), null, :interval, null));
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:alert), null, :alert, null));
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:power), null, :power, null));
+    menu.addItem(new WatchUi.MenuItem(menuItemLabel(:view), null, :view, null));
+    menu.addItem(new WatchUi.MenuItem(menuItemLabel(:mode), null, :mode, null));
+    menu.addItem(new WatchUi.MenuItem(menuItemLabel(:sens), null, :sens, null));
+    menu.addItem(new WatchUi.MenuItem(menuItemLabel(:still), null, :still, null));
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:test), null, :test, null));
     menu.addItem(new WatchUi.MenuItem(menuItemLabel(:back), null, :back, null));
     return menu;
@@ -54,6 +90,18 @@ class SettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
         } else if (id == :power) {
             Settings.setVibePower(Settings.nextVibePower(Settings.getVibePower()));
             menu.updateItem(new WatchUi.MenuItem(menuItemLabel(:power), null, :power, null), 2);
+        } else if (id == :view) {
+            Settings.setViewMode(Settings.nextViewMode(Settings.getViewMode()));
+            menu.updateItem(new WatchUi.MenuItem(menuItemLabel(:view), null, :view, null), 3);
+        } else if (id == :mode) {
+            Settings.setAutoMode(Settings.nextAutoMode(Settings.getAutoMode()));
+            menu.updateItem(new WatchUi.MenuItem(menuItemLabel(:mode), null, :mode, null), 4);
+        } else if (id == :sens) {
+            Settings.setSensitivity(Settings.nextSensitivity(Settings.getSensitivity()));
+            menu.updateItem(new WatchUi.MenuItem(menuItemLabel(:sens), null, :sens, null), 5);
+        } else if (id == :still) {
+            Settings.setStillSec(Settings.nextStillSec(Settings.getStillSec()));
+            menu.updateItem(new WatchUi.MenuItem(menuItemLabel(:still), null, :still, null), 6);
         } else if (id == :test) {
             Alert.testSound();
         } else {
