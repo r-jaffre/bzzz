@@ -35,6 +35,11 @@ class AutoDetector {
         gravityInit = false;
     }
 
+    // Absolute value without Toybox.Math.abs (see ingest).
+    static function absVal(v) {
+        return v < 0 ? -v : v;
+    }
+
     // Feed one batch of accelerometer samples (milli-G arrays).
     // Params are intentionally untyped: the platform may deliver
     // Array<Float> or Array<Number> and a declared type mismatch
@@ -63,7 +68,11 @@ class AutoDetector {
                 gy = gy * 9 / 10 + y / 10;
                 gz = gz * 9 / 10 + z / 10;
             }
-            acc += Math.abs(x - gx) + Math.abs(y - gy) + Math.abs(z - gz);
+            // Math.abs is @since CIQ 6.0.3 and is NOT reliably present in
+            // older device runtimes (hard "Symbol Not Found" VM abort on a
+            // FR255 with CIQ 6.0.4 / FW 29.52 - it cannot be caught).
+            // A plain conditional works on every firmware.
+            acc += AutoDetector.absVal(x - gx) + AutoDetector.absVal(y - gy) + AutoDetector.absVal(z - gz);
         }
         var meanMG = acc / n;
         var moving = meanMG > thresholdMG;
