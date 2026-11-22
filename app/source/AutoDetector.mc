@@ -17,7 +17,7 @@ import Toybox.Math;
 // water motion sit in a middle zone that must neither build "move"
 // credit nor fully erase "still" credit, otherwise holding the watch
 // in hand exits rest after a few seconds of micro-shakes.
-//   quiet:   meanMG <= thresholdMG
+//   quiet:   meanMG <= thresholdMG (rest ends ONLY on sustained motion)
 //   strong:  meanMG >= thresholdMG * MOTION_FACTOR (real swimming)
 //   middle:  in between (tremor, gentle drift)
 // Counters leak instead of resetting to zero, so one noisy second
@@ -28,8 +28,11 @@ import Toybox.Math;
 //     middle -dt/2 - only sustained real swimming can cross
 //     MOVE_ONSET_MS, never intermittent tremor.
 class AutoDetector {
-    static const MOVE_ONSET_MS = 3000;
-    static const MOTION_FACTOR = 3;
+    // Sustained strong motion required to end a rest: 5s of consecutive
+    // strong seconds (middle/quiet seconds bleed credit, so intermittent
+    // hand motion can never accumulate this).
+    static const MOVE_ONSET_MS = 5000;
+    static const MOTION_FACTOR = 4;
 
     var sampleRate = 10;
     var thresholdMG = 50;

@@ -29,7 +29,7 @@ class StopwatchView extends WatchUi.View {
 
     // Build marker drawn on the ready screen, so the installed build can be
     // verified on the actual watch (MTP sideloading gives no feedback).
-    static const BUILD_TAG = "v1.4";
+    static const BUILD_TAG = "v1.5";
 
     function initialize() {
         View.initialize();
