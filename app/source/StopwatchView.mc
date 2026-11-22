@@ -25,6 +25,7 @@ class StopwatchView extends WatchUi.View {
     var lastSec = -1;
     var detector as AutoDetector or Null = null;
     var sensorOn = false;
+    var sensorFailed = false;
 
     function initialize() {
         View.initialize();
@@ -103,7 +104,7 @@ class StopwatchView extends WatchUi.View {
     // --- Automatic rest detection (accelerometer) ---
 
     function startSensor() as Void {
-        if (sensorOn) {
+        if (sensorOn || sensorFailed) {
             return;
         }
         if (Sensor has :registerSensorDataListener) {
@@ -111,18 +112,29 @@ class StopwatchView extends WatchUi.View {
                 detector = new AutoDetector(10, Settings.getMotionThreshold());
             }
             detector.reset();
+            // Clamp the requested sample rate to what the hardware supports:
+            // asking for a rate above the device max throws on real devices
+            // (the simulator happily accepts anything).
+            var rate = 10;
+            if ((Sensor has :getMaxSampleRateForSensorType)) {
+                var maxRate = Sensor.getMaxSampleRateForSensorType(:accelerometer);
+                if (maxRate instanceof Lang.Number && maxRate > 0 && maxRate < rate) {
+                    rate = maxRate;
+                }
+            }
             try {
                 Sensor.registerSensorDataListener(method(:onSensorData), {
                     :period => 1,
                     :accelerometer => {
                         :enabled => true,
-                        :sampleRate => 10
+                        :sampleRate => rate
                     }
                 });
                 sensorOn = true;
             } catch (e) {
                 // Fall back to manual mode if the sensor can't start.
                 sensorOn = false;
+                sensorFailed = true;
             }
         }
     }
@@ -137,16 +149,27 @@ class StopwatchView extends WatchUi.View {
         sensorOn = false;
     }
 
+    // Sensor data callback. Runs in a context we cannot debug on hardware,
+    // so any failure here must degrade gracefully to manual mode instead of
+    // killing the session (an uncaught exception = CIQ failure screen).
     function onSensorData(sensorData as Sensor.SensorData) as Void {
-        if (detector == null) {
-            return;
-        }
-        if (sensorData has :accelerometerData) {
-            var d = sensorData.accelerometerData;
-            if (d != null) {
-                detector.ingest(d.x, d.y, d.z);
-                evaluateAutoTransitions();
+        try {
+            if (detector == null) {
+                return;
             }
+            if (sensorData has :accelerometerData) {
+                var d = sensorData.accelerometerData;
+                // The axis arrays are individually nullable per the docs.
+                if (d != null && d.x != null && d.y != null && d.z != null) {
+                    detector.ingest(d.x, d.y, d.z);
+                    evaluateAutoTransitions();
+                }
+            }
+        } catch (e) {
+            // Never let a sensor issue abort the workout: stop sensing and
+            // keep running with button-driven (manual) behavior.
+            sensorFailed = true;
+            stopSensor();
         }
     }
 
@@ -170,6 +193,7 @@ class StopwatchView extends WatchUi.View {
     function reset() as Void {
         stopAllTimers();
         stopSensor();
+        sensorFailed = false;
         Alert.resetBuzz();
         lastSec = -1;
         phase = StopwatchView.PHASE_READY;
@@ -196,7 +220,7 @@ class StopwatchView extends WatchUi.View {
 
     function onUiTick() as Void {
         // Keep motion sensing in sync with settings (menu can change mid-session).
-        if (Settings.getAutoMode() == Settings.AUTO_ON && sensorOn == false && phase != StopwatchView.PHASE_READY) {
+        if (Settings.getAutoMode() == Settings.AUTO_ON && sensorOn == false && sensorFailed == false && phase != StopwatchView.PHASE_READY) {
             startSensor();
         }
         if (detector != null) {

@@ -36,8 +36,14 @@ class AutoDetector {
     }
 
     // Feed one batch of accelerometer samples (milli-G arrays).
+    // Params are intentionally untyped: the platform may deliver
+    // Array<Float> or Array<Number> and a declared type mismatch
+    // throws at runtime on hardware.
     // Returns true if the batch is classified as "moving".
-    function ingest(xArr as Lang.Array<Lang.Number>, yArr as Lang.Array<Lang.Number>, zArr as Lang.Array<Lang.Number>) as Lang.Boolean {
+    function ingest(xArr, yArr, zArr) as Lang.Boolean {
+        if (xArr == null || yArr == null || zArr == null) {
+            return false;
+        }
         var n = xArr.size() as Lang.Number;
         if (n <= 0) {
             return false;
