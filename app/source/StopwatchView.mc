@@ -29,7 +29,7 @@ class StopwatchView extends WatchUi.View {
 
     // Build marker drawn on the ready screen, so the installed build can be
     // verified on the actual watch (MTP sideloading gives no feedback).
-    static const BUILD_TAG = "v1.3";
+    static const BUILD_TAG = "v1.4";
 
     function initialize() {
         View.initialize();
@@ -63,9 +63,24 @@ class StopwatchView extends WatchUi.View {
         var now = System.getTimer();
         phase = StopwatchView.PHASE_REST;
         if (backdate && detector != null) {
-            phaseStartMs = now - detector.stillMs;
+            // Clamp the backdate to the stillness delay: stillMs keeps
+            // growing during the previous phase, so raw stillMs can be
+            // larger than the confirmation window.
+            var bd = detector.stillMs;
+            var maxBd = Settings.getStillSec() * 1000;
+            if (bd > maxBd) {
+                bd = maxBd;
+            }
+            phaseStartMs = now - bd;
         } else {
             phaseStartMs = now;
+        }
+        // A new phase starts from zero motion credit: leftover credit
+        // from the previous phase otherwise re-triggers transitions
+        // immediately (swim -> rest loop).
+        if (detector != null) {
+            detector.stillMs = 0;
+            detector.moveMs = 0;
         }
         ticks = 0;
         // Lock the interval for the whole rest phase so the buzz grid
@@ -94,6 +109,11 @@ class StopwatchView extends WatchUi.View {
         var now = System.getTimer();
         phase = StopwatchView.PHASE_SWIM;
         phaseStartMs = now;
+        // Fresh phase, fresh motion credit (see enterRest).
+        if (detector != null) {
+            detector.stillMs = 0;
+            detector.moveMs = 0;
+        }
         ticks = 0;
         startUiTimer();
         if (Settings.getAutoMode() == Settings.AUTO_ON) {
