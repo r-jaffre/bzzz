@@ -65,4 +65,16 @@ class Alert {
             Attention.vibrate([new Attention.VibeProfile(100, 250)]);
         }
     }
+
+    // Two long pulses: auto motion detection is unavailable on this device,
+    // the session continues in manual (button) mode.
+    static function autoDisabled() as Void {
+        if (Attention has :vibrate) {
+            Attention.vibrate([
+                new Attention.VibeProfile(100, 350),
+                new Attention.VibeProfile(0, 150),
+                new Attention.VibeProfile(100, 350)
+            ]);
+        }
+    }
 }

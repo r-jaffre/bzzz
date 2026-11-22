@@ -27,6 +27,10 @@ class StopwatchView extends WatchUi.View {
     var sensorOn = false;
     var sensorFailed = false;
 
+    // Build marker drawn on the ready screen, so the installed build can be
+    // verified on the actual watch (MTP sideloading gives no feedback).
+    static const BUILD_TAG = "v1.1";
+
     function initialize() {
         View.initialize();
     }
@@ -107,22 +111,25 @@ class StopwatchView extends WatchUi.View {
         if (sensorOn || sensorFailed) {
             return;
         }
-        if (Sensor has :registerSensorDataListener) {
-            if (detector == null) {
-                detector = new AutoDetector(10, Settings.getMotionThreshold());
-            }
-            detector.reset();
-            // Clamp the requested sample rate to what the hardware supports:
-            // asking for a rate above the device max throws on real devices
-            // (the simulator happily accepts anything).
-            var rate = 10;
-            if ((Sensor has :getMaxSampleRateForSensorType)) {
-                var maxRate = Sensor.getMaxSampleRateForSensorType(:accelerometer);
-                if (maxRate instanceof Lang.Number && maxRate > 0 && maxRate < rate) {
-                    rate = maxRate;
+        try {
+            if (Sensor has :registerSensorDataListener) {
+                if (detector == null) {
+                    detector = new AutoDetector(10, Settings.getMotionThreshold());
                 }
-            }
-            try {
+                detector.reset();
+                // Clamp the requested sample rate to what the hardware
+                // supports. Guarded separately: this call itself must
+                // never be able to take the session down.
+                var rate = 10;
+                try {
+                    if ((Sensor has :getMaxSampleRateForSensorType)) {
+                        var maxRate = Sensor.getMaxSampleRateForSensorType(:accelerometer);
+                        if (maxRate instanceof Lang.Number && maxRate > 0 && maxRate < rate) {
+                            rate = maxRate;
+                        }
+                    }
+                } catch (eRate) {
+                }
                 Sensor.registerSensorDataListener(method(:onSensorData), {
                     :period => 1,
                     :accelerometer => {
@@ -131,11 +138,22 @@ class StopwatchView extends WatchUi.View {
                     }
                 });
                 sensorOn = true;
-            } catch (e) {
-                // Fall back to manual mode if the sensor can't start.
-                sensorOn = false;
-                sensorFailed = true;
             }
+        } catch (e) {
+            // Nothing in the sensing setup may ever kill the session:
+            // disable auto detection and keep going button-driven.
+            onSensorFail();
+        }
+    }
+
+    // Single place for "auto mode is unavailable, running manual instead".
+    // Buzzes once so the user knows auto is off, and shows a marker on screen.
+    function onSensorFail() as Void {
+        if (!sensorFailed) {
+            sensorFailed = true;
+            stopSensor();
+            Alert.autoDisabled();
+            WatchUi.requestUpdate();
         }
     }
 
@@ -168,8 +186,7 @@ class StopwatchView extends WatchUi.View {
         } catch (e) {
             // Never let a sensor issue abort the workout: stop sensing and
             // keep running with button-driven (manual) behavior.
-            sensorFailed = true;
-            stopSensor();
+            onSensorFail();
         }
     }
 
@@ -410,6 +427,19 @@ class StopwatchView extends WatchUi.View {
         }
         if (medTxt != "") {
             dc.drawText(w / 2, medY, medFont, medTxt, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
+
+        // Build tag on the ready screen: confirms which build is on the
+        // watch (tiny gray text, diagnostic only).
+        if (phase == StopwatchView.PHASE_READY) {
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
+            dc.drawText(w / 2, h * 95 / 100, Graphics.FONT_TINY, StopwatchView.BUILD_TAG, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
+        // Auto mode was requested but the sensor failed: say so, or the
+        // silent manual fallback is indistinguishable from a broken feature.
+        if (sensorFailed && Settings.getAutoMode() == Settings.AUTO_ON && phase != StopwatchView.PHASE_READY) {
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
+            dc.drawText(w / 2, h * 5 / 100, Graphics.FONT_TINY, "auto off", Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         }
 
         try {
